@@ -1,0 +1,67 @@
+graph TB
+    subgraph Central["Central Service"]
+        UserMgmt[User Management]
+        FlightReg[Flight Registration]
+        NotifCalc[Notification Calculator]
+        FlightMon[Flight Monitor]
+        NotifDisp[Notification Dispatcher]
+        QueueConsumer[Queue Consumer]
+    end
+    
+    subgraph External["External Services"]
+        SchipholSvc[Schiphol Service]
+        MapsSvc[Google Maps Service]
+    end
+    
+    subgraph DB["Database"]
+        UsersDB[(Users Table)]
+        FlightsDB[(Flights Table)]
+        NotifsDB[(Notifications Table)]
+    end
+    
+    subgraph Queue["Message Queue - RabbitMQ"]
+        FlightQueue{{Flight Updates Queue}}
+        TrafficQueue{{Traffic Updates Queue}}
+    end
+    
+    User((User))
+    EmailSvc[Email Service]
+    
+    %% User interactions
+    User -->|Sign Up / Login| UserMgmt
+    User -->|Register Flight| FlightReg
+    
+    %% Central Service - Database
+    UserMgmt -->|Store/Retrieve| UsersDB
+    FlightReg -->|Store Flight Preferences| FlightsDB
+    FlightReg -->|Calculate Notification Times| NotifCalc
+    
+    NotifCalc -->|Store Schedule| NotifsDB
+    NotifCalc -->|Read Flight Data| FlightsDB
+    
+    %% External Services to Queue
+    SchipholSvc -->|Push Updates| FlightQueue
+    MapsSvc -->|Push Updates| TrafficQueue
+    
+    %% Queue Consumer
+    QueueConsumer -->|Consume| FlightQueue
+    QueueConsumer -->|Consume| TrafficQueue
+    QueueConsumer -->|Process| FlightMon
+    
+    %% Flight Monitor
+    FlightMon -->|Update Status| FlightsDB
+    FlightMon -->|Check Rules| NotifsDB
+    FlightMon -->|Trigger| NotifDisp
+    
+    %% Notification Dispatcher
+    NotifDisp -->|Send Email| EmailSvc
+    NotifDisp -->|Update Status| NotifsDB
+    
+    %% Styling
+    classDef serviceStyle fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef dbStyle fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef queueStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    
+    class UserMgmt,FlightReg,NotifCalc,FlightMon,NotifDisp,QueueConsumer serviceStyle
+    class UsersDB,FlightsDB,NotifsDB dbStyle
+    class FlightQueue,TrafficQueue queueStyle

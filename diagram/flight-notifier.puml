@@ -1,0 +1,76 @@
+@startuml Flight Delay Notifier System
+
+' Define components
+package "Central Service" {
+    [User Management] as UserMgmt
+    [Flight Registration] as FlightReg
+    [Notification Calculator] as NotifCalc
+    [Flight Monitor] as FlightMon
+    [Notification Dispatcher] as NotifDisp
+    [Queue Consumer] as QueueConsumer
+}
+
+package "External Services" {
+    [Schiphol Service] as SchipholSvc
+    [Google Maps Service] as MapsSvc
+}
+
+database "Database" {
+    [Users Table] as UsersDB
+    [Flights Table] as FlightsDB
+    [Notifications Table] as NotifsDB
+}
+
+queue "Message Queue (RabbitMQ)" {
+    [Flight Updates Queue] as FlightQueue
+    [Traffic Updates Queue] as TrafficQueue
+}
+
+actor User
+cloud "Email Service" as EmailSvc
+
+' Define relationships
+User --> UserMgmt : Sign Up / Login
+User --> FlightReg : Register Flight
+
+UserMgmt --> UsersDB : Store/Retrieve User Data
+FlightReg --> FlightsDB : Store Flight Preferences
+FlightReg --> NotifCalc : Calculate Notification Times
+
+NotifCalc --> NotifsDB : Store Notification Schedule
+NotifCalc --> FlightsDB : Read Flight Data
+
+SchipholSvc --> FlightQueue : Push Flight Updates
+MapsSvc --> TrafficQueue : Push Traffic Updates
+
+QueueConsumer --> FlightQueue : Consume Messages
+QueueConsumer --> TrafficQueue : Consume Messages
+
+QueueConsumer --> FlightMon : Process Updates
+
+FlightMon --> FlightsDB : Update Flight Status
+FlightMon --> NotifsDB : Check Notification Rules
+FlightMon --> NotifDisp : Trigger Notifications
+
+NotifDisp --> EmailSvc : Send Email
+NotifDisp --> NotifsDB : Update Notification Status
+
+' Add notes
+note right of QueueConsumer
+    Listens for updates from 
+    external services via RabbitMQ
+end note
+
+note right of FlightMon
+    Monitors flight status and
+    decides when to notify users
+    based on major updates
+end note
+
+note right of NotifCalc
+    Calculates optimal notification
+    timing based on flight and
+    traffic data
+end note
+
+@enduml

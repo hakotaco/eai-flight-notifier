@@ -1,0 +1,66 @@
+@startuml Flight Registration and Notification Sequence
+
+actor User
+participant "Central Service" as Central
+participant "Flight Service" as FlightSvc
+participant "Notification Calculator" as NotifCalc
+database "Database" as DB
+queue "RabbitMQ" as Queue
+participant "Queue Consumer" as Consumer
+participant "Flight Monitor" as Monitor
+participant "Notification Dispatcher" as Dispatcher
+participant "Email Service" as Email
+
+== User Registration and Flight Setup ==
+User -> Central: Register Account
+Central -> DB: Store User Data
+Central --> User: Account Created
+
+User -> Central: Register Flight Details
+Central -> FlightSvc: Create Flight Record
+FlightSvc -> DB: Store Flight
+FlightSvc -> NotifCalc: Calculate Notification Times
+NotifCalc -> DB: Read Flight & User Data
+NotifCalc -> NotifCalc: Calculate Optimal Timing
+NotifCalc -> DB: Store Notification Schedule
+NotifCalc --> User: Flight Registered Successfully
+
+== Background: External Services Update ==
+note over Queue
+    Schiphol Service and Google Maps Service
+    continuously poll their APIs and push
+    updates to RabbitMQ queues
+end note
+
+"Schiphol Service" -> Queue: Push Flight Delay Update
+"Google Maps Service" -> Queue: Push Traffic Update
+
+== Message Processing ==
+Consumer -> Queue: Consume Flight Update
+Consumer -> Monitor: Process Flight Update
+Monitor -> DB: Retrieve Flight Details
+Monitor -> Monitor: Evaluate Significance
+
+alt Significant Update Detected
+    Monitor -> DB: Update Flight Status
+    Monitor -> DB: Check Notification Rules
+    Monitor -> NotifCalc: Recalculate Timing
+    NotifCalc -> DB: Update Notification Schedule
+    Monitor -> Dispatcher: Trigger Notification
+    Dispatcher -> DB: Get User Details
+    Dispatcher -> Email: Send Notification Email
+    Email --> User: Delay Alert Email
+    Dispatcher -> DB: Mark Notification as Sent
+else Minor Update
+    Monitor -> DB: Log Update
+    note right: No user notification needed
+end
+
+== Scheduled Notification ==
+Dispatcher -> DB: Check Pending Notifications
+Dispatcher -> Dispatcher: Find Due Notifications
+Dispatcher -> Email: Send Departure Reminder
+Email --> User: Time to Leave for Airport
+Dispatcher -> DB: Mark as Sent
+
+@enduml

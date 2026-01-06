@@ -1,0 +1,169 @@
+@startuml Flight Notifier Class Diagram
+
+' Entities
+class User {
+    - id: UUID
+    - email: String
+    - name: String
+    - homeAddress: String
+    - createdAt: DateTime
+    + register()
+    + login()
+    + updateProfile()
+}
+
+class Flight {
+    - id: UUID
+    - userId: UUID
+    - flightNumber: String
+    - departureTime: DateTime
+    - arrivalTime: DateTime
+    - origin: String
+    - destination: String
+    - status: FlightStatus
+    - lastUpdated: DateTime
+    + registerFlight()
+    + updateStatus()
+    + getDetails()
+}
+
+class NotificationSchedule {
+    - id: UUID
+    - userId: UUID
+    - flightId: UUID
+    - scheduledTime: DateTime
+    - notificationType: NotificationType
+    - isSent: Boolean
+    - createdAt: DateTime
+    + calculateSchedule()
+    + updateSchedule()
+    + markAsSent()
+}
+
+class FlightUpdate {
+    - id: UUID
+    - flightId: UUID
+    - updateType: UpdateType
+    - oldValue: String
+    - newValue: String
+    - timestamp: DateTime
+    - source: String
+    + isSignificant(): Boolean
+}
+
+class TrafficUpdate {
+    - id: UUID
+    - userId: UUID
+    - origin: String
+    - destination: String
+    - travelTime: Integer
+    - delay: Integer
+    - timestamp: DateTime
+    + calculateImpact(): Integer
+}
+
+enum FlightStatus {
+    SCHEDULED
+    DELAYED
+    DEPARTED
+    ARRIVED
+    CANCELLED
+}
+
+enum NotificationType {
+    DEPARTURE_REMINDER
+    TRAFFIC_ALERT
+    DELAY_NOTIFICATION
+    CANCELLATION_ALERT
+}
+
+enum UpdateType {
+    DELAY
+    GATE_CHANGE
+    STATUS_CHANGE
+    TIME_CHANGE
+}
+
+' Services
+class UserService {
+    + createUser(userData): User
+    + authenticateUser(credentials): User
+    + getUserById(id): User
+}
+
+class FlightService {
+    + registerFlight(userId, flightData): Flight
+    + getFlightDetails(flightId): Flight
+    + updateFlightStatus(flightId, status): void
+    + getUserFlights(userId): List<Flight>
+}
+
+class NotificationCalculator {
+    + calculateNotificationTime(flight, traffic): DateTime
+    + recalculateOnUpdate(flight): void
+    + getScheduledNotifications(userId): List<NotificationSchedule>
+}
+
+class FlightMonitor {
+    + processFlightUpdate(update): void
+    + checkNotificationTriggers(flightId): void
+    + evaluateSignificance(update): Boolean
+}
+
+class NotificationDispatcher {
+    + sendNotification(schedule): void
+    + sendEmail(user, message): void
+    + retryFailedNotification(scheduleId): void
+}
+
+class QueueConsumer {
+    + consumeFlightUpdates(): void
+    + consumeTrafficUpdates(): void
+    + processMessage(message): void
+}
+
+' Repositories
+interface UserRepository {
+    + save(user): User
+    + findById(id): User
+    + findByEmail(email): User
+}
+
+interface FlightRepository {
+    + save(flight): Flight
+    + findById(id): Flight
+    + findByUserId(userId): List<Flight>
+    + update(flight): void
+}
+
+interface NotificationRepository {
+    + save(schedule): NotificationSchedule
+    + findByFlightId(flightId): List<NotificationSchedule>
+    + findPendingNotifications(): List<NotificationSchedule>
+    + update(schedule): void
+}
+
+' Relationships
+User "1" -- "0..*" Flight : registers >
+User "1" -- "0..*" NotificationSchedule : receives >
+Flight "1" -- "0..*" NotificationSchedule : triggers >
+Flight "1" -- "0..*" FlightUpdate : has >
+User "1" -- "0..*" TrafficUpdate : receives >
+
+UserService --> UserRepository : uses
+FlightService --> FlightRepository : uses
+NotificationCalculator --> NotificationRepository : uses
+NotificationCalculator --> FlightRepository : uses
+
+QueueConsumer --> FlightMonitor : forwards updates to
+FlightMonitor --> FlightService : uses
+FlightMonitor --> NotificationCalculator : uses
+FlightMonitor --> NotificationDispatcher : triggers
+
+NotificationDispatcher --> NotificationRepository : uses
+
+Flight --> FlightStatus : has
+NotificationSchedule --> NotificationType : has
+FlightUpdate --> UpdateType : has
+
+@enduml
