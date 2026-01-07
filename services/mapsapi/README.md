@@ -9,15 +9,18 @@ What it does:
 
 Important data handling changes:
 - This service does NOT store user PII locally (name, email). Travelers are fetched from your main dashboard at runtime.
-- The dashboard provides: id, name, email, address, flightNumber, and departure date/time. The service uses these transiently (for email content and routing) but does not persist any PII.
-
-Config files:
-- .env.example is the template. Copy it to .env and fill in values. Keep .env private (it’s already in .gitignore).
+- The  dashboard provides: id, name, email, address, flightNumber, and departure date/time. The service uses these transiently but does not persist any PII.
 
 HTTP API:
 - GET /health
 - GET /notifications
 - POST /check-now (manual trigger; fetches travelers from dashboard and runs checks immediately)
+
+How traffic is calculated and scheduled (short):
+- Traffic calculation (Google Maps): `src/services/googleMaps.ts` → `GoogleMapsClient.assessTraffic(origin, destination)`
+  - Calls Google Directions API with `departure_time=now` and `traffic_model=best_guess`, picks the route with the smallest `duration_in_traffic`, and classifies as `heavy` if ETA ≥ 25% slower or delay ≥ 15 minutes; else `regular`.
+- Scheduler: `src/scheduler.ts` → `startScheduler()`
+  - Runs once at startup, then on cron `POLL_CRON` (default hourly). Fetches users from `DASHBOARD_USERS_URL`, filters those departing within `POLL_WINDOW_HOURS`, and for each user calls `TrafficService.checkUser` to create a notification and publish it to RabbitMQ (`RABBITMQ_EXCHANGE`).
 
 Environment (see .env.example):
 - GOOGLE_MAPS_API_KEY (required; enable Directions + Geocoding APIs)
@@ -31,14 +34,17 @@ Environment (see .env.example):
 
 Run with Docker:
 1. Copy .env.example to .env and set GOOGLE_MAPS_API_KEY and DASHBOARD_USERS_URL.
-2. docker compose up --build
-3. Service: http://localhost:3000, RabbitMQ UI: http://localhost:15672 (guest/guest)
-
-Local dev:
-1. npm install
-2. Copy .env.example to .env and set GOOGLE_MAPS_API_KEY and DASHBOARD_USERS_URL
-3. npm run dev
-
+2. Start the stack:
+   - `docker compose up --build`
+   - Optional logs: `docker compose logs -f mapsapi`
+3. What you should see in logs:
+   - `HTTP server listening on :3000`
+   - `[Scheduler] Started with cron '0 * * * *'`
+   - An initial run (may say no users if the window/filter doesn’t match)
+4. Verify:
+   - Service health: http://localhost:3000/health → `{ ok: true }`
+   - Recent notifications: http://localhost:3000/notifications
+   - RabbitMQ UI: http://localhost:15672 (guest/guest)
 Notes:
 - Notifications are persisted under ./data (notifications.json) — no user PII is stored.
 - Notifications are also published to RabbitMQ exchange traffic.notifications (fanout).
