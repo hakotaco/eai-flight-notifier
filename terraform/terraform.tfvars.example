@@ -1,0 +1,11 @@
+
+/**
+ * Match the service name in docker-compose.yaml and MQ_HOST in .env
+ * Use 'localhost' if the terraform is executed on host
+ * Since the variables are passed from docker-compose.yaml, it's not necessary to rename this file to terraform.tfvars
+ */
+
+mq_host            = "mq"
+mq_management_port = 15672
+mq_user            = "admin"
+mq_pass            = "password"

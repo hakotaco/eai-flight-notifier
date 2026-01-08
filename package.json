@@ -1,0 +1,19 @@
+{
+  "name": "ams-flight-ingestion-merge",
+  "type": "module",
+  "scripts": {
+    "setup": "bun run setup:env && bun run setup:install",
+    "setup:env": "cp -n .env.example .env || true && ln -sf ../.env schiphol-api/.env && ln -sf ../.env backend/.env && ln -sf ../.env frontend/.env",
+    "setup:install": "bun install",
+    "dev": "docker compose --profile infra --profile app up -d && echo '[INFO] All services started.'",
+    "stop": "docker compose --profile infra --profile app down && echo '[INFO] All services stopped.'",
+    "clean": "docker compose --profile infra --profile app down -v && echo '[INFO] Environment cleaned (Volumes removed).'"
+  },
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

@@ -1,0 +1,958 @@
+{
+  "flights": [
+    {
+      "lastUpdatedAt": "2025-12-17T01:14:57.083+01:00",
+      "actualLandingTime": "2025-12-16T23:49:53.000+01:00",
+      "aircraftRegistration": "PHYHT",
+      "aircraftType": {
+        "iataMain": "32S",
+        "iataSub": "32Q"
+      },
+      "baggageClaim": {
+        "belts": [
+          "16"
+        ]
+      },
+      "codeshares": {
+        "codeshares": [
+          "KL2604"
+        ]
+      },
+      "estimatedLandingTime": "2025-12-16T23:49:57.000+01:00",
+      "expectedTimeOnBelt": "2025-12-17T00:43:34.629+01:00",
+      "flightDirection": "A",
+      "flightName": "HV5756",
+      "flightNumber": 5756,
+      "gate": "E8",
+      "pier": "E",
+      "id": "143871159627907874",
+      "isOperationalFlight": true,
+      "mainFlight": "HV5756",
+      "prefixIATA": "HV",
+      "prefixICAO": "TRA",
+      "airlineCode": 164,
+      "publicFlightState": {
+        "flightStates": [
+          "ARR",
+          "EXP"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "RAK"
+        ],
+        "eu": "N",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T00:10:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "00:10:00",
+      "serviceType": "J",
+      "terminal": 3,
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-17T01:14:57.083+01:00",
+      "actualLandingTime": "2025-12-16T23:49:53.000+01:00",
+      "aircraftRegistration": "PHYHT",
+      "aircraftType": {
+        "iataMain": "32S",
+        "iataSub": "32Q"
+      },
+      "baggageClaim": {
+        "belts": [
+          "16"
+        ]
+      },
+      "codeshares": {
+        "codeshares": [
+          "KL2604"
+        ]
+      },
+      "estimatedLandingTime": "2025-12-16T23:49:57.000+01:00",
+      "expectedTimeOnBelt": "2025-12-17T00:43:34.629+01:00",
+      "flightDirection": "A",
+      "flightName": "KL2604",
+      "flightNumber": 2604,
+      "gate": "E8",
+      "pier": "E",
+      "id": "143871160006181366",
+      "isOperationalFlight": true,
+      "mainFlight": "HV5756",
+      "prefixIATA": "KL",
+      "prefixICAO": "KLM",
+      "airlineCode": 100,
+      "publicFlightState": {
+        "flightStates": [
+          "ARR",
+          "EXP"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "RAK"
+        ],
+        "eu": "N",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T00:10:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "00:10:00",
+      "serviceType": "J",
+      "terminal": 3,
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-17T03:16:34.100+01:00",
+      "actualLandingTime": "2025-12-17T00:32:22.000+01:00",
+      "aircraftRegistration": "PHYHY",
+      "aircraftType": {
+        "iataMain": "32S",
+        "iataSub": "32Q"
+      },
+      "baggageClaim": {
+        "belts": [
+          "15"
+        ]
+      },
+      "codeshares": {
+        "codeshares": [
+          "KL2573"
+        ]
+      },
+      "estimatedLandingTime": "2025-12-17T00:32:34.000+01:00",
+      "expectedTimeOnBelt": "2025-12-17T01:16:35.000+01:00",
+      "flightDirection": "A",
+      "flightName": "HV5666",
+      "flightNumber": 5666,
+      "gate": "C12",
+      "pier": "C",
+      "id": "143871159627905210",
+      "isOperationalFlight": true,
+      "mainFlight": "HV5666",
+      "prefixIATA": "HV",
+      "prefixICAO": "TRA",
+      "airlineCode": 164,
+      "publicFlightState": {
+        "flightStates": [
+          "ARR"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "LPA"
+        ],
+        "eu": "S",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T00:35:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "00:35:00",
+      "serviceType": "J",
+      "terminal": 3,
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-17T03:16:34.100+01:00",
+      "actualLandingTime": "2025-12-17T00:32:22.000+01:00",
+      "aircraftRegistration": "PHYHY",
+      "aircraftType": {
+        "iataMain": "32S",
+        "iataSub": "32Q"
+      },
+      "baggageClaim": {
+        "belts": [
+          "15"
+        ]
+      },
+      "codeshares": {
+        "codeshares": [
+          "KL2573"
+        ]
+      },
+      "estimatedLandingTime": "2025-12-17T00:32:34.000+01:00",
+      "expectedTimeOnBelt": "2025-12-17T01:16:35.000+01:00",
+      "flightDirection": "A",
+      "flightName": "KL2573",
+      "flightNumber": 2573,
+      "gate": "C12",
+      "pier": "C",
+      "id": "143871160006179144",
+      "isOperationalFlight": true,
+      "mainFlight": "HV5666",
+      "prefixIATA": "KL",
+      "prefixICAO": "KLM",
+      "airlineCode": 100,
+      "publicFlightState": {
+        "flightStates": [
+          "ARR"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "LPA"
+        ],
+        "eu": "S",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T00:35:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "00:35:00",
+      "serviceType": "J",
+      "terminal": 3,
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-17T02:53:59.089+01:00",
+      "actualLandingTime": "2025-12-17T01:00:55.000+01:00",
+      "aircraftRegistration": "PHYHU",
+      "aircraftType": {
+        "iataMain": "32S",
+        "iataSub": "32Q"
+      },
+      "baggageClaim": {
+        "belts": [
+          "6"
+        ]
+      },
+      "codeshares": {
+        "codeshares": [
+          "KL2591"
+        ]
+      },
+      "estimatedLandingTime": "2025-12-17T01:00:48.000+01:00",
+      "expectedTimeOnBelt": "2025-12-17T01:50:24.000+01:00",
+      "flightDirection": "A",
+      "flightName": "HV6672",
+      "flightNumber": 6672,
+      "gate": "D63",
+      "pier": "D",
+      "id": "143871159628006582",
+      "isOperationalFlight": true,
+      "mainFlight": "HV6672",
+      "prefixIATA": "HV",
+      "prefixICAO": "TRA",
+      "airlineCode": 164,
+      "publicFlightState": {
+        "flightStates": [
+          "ARR"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "TFS"
+        ],
+        "eu": "S",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T01:05:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "01:05:00",
+      "serviceType": "J",
+      "terminal": 1,
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-17T02:53:59.089+01:00",
+      "actualLandingTime": "2025-12-17T01:00:55.000+01:00",
+      "aircraftRegistration": "PHYHU",
+      "aircraftType": {
+        "iataMain": "32S",
+        "iataSub": "32Q"
+      },
+      "baggageClaim": {
+        "belts": [
+          "6"
+        ]
+      },
+      "codeshares": {
+        "codeshares": [
+          "KL2591"
+        ]
+      },
+      "estimatedLandingTime": "2025-12-17T01:00:48.000+01:00",
+      "expectedTimeOnBelt": "2025-12-17T01:50:24.000+01:00",
+      "flightDirection": "A",
+      "flightName": "KL2591",
+      "flightNumber": 2591,
+      "gate": "D63",
+      "pier": "D",
+      "id": "143871160006179288",
+      "isOperationalFlight": true,
+      "mainFlight": "HV6672",
+      "prefixIATA": "KL",
+      "prefixICAO": "KLM",
+      "airlineCode": 100,
+      "publicFlightState": {
+        "flightStates": [
+          "ARR"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "TFS"
+        ],
+        "eu": "S",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T01:05:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "01:05:00",
+      "serviceType": "J",
+      "terminal": 1,
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-17T03:57:26.659+01:00",
+      "actualLandingTime": "2025-12-17T03:35:46.000+01:00",
+      "aircraftRegistration": "JA12KZ",
+      "aircraftType": {
+        "iataMain": "74F",
+        "iataSub": "74N"
+      },
+      "estimatedLandingTime": "2025-12-17T03:36:00.000+01:00",
+      "flightDirection": "A",
+      "flightName": "KZ004",
+      "flightNumber": 4,
+      "id": "143871158476545644",
+      "isOperationalFlight": true,
+      "mainFlight": "KZ004",
+      "prefixIATA": "KZ",
+      "prefixICAO": "NCA",
+      "airlineCode": 131,
+      "publicFlightState": {
+        "flightStates": [
+          "LND"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "NRT",
+          "ANC"
+        ],
+        "eu": "N",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T03:40:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "03:40:00",
+      "serviceType": "F",
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-17T04:50:11.232+01:00",
+      "aircraftRegistration": "OELYC",
+      "aircraftType": {
+        "iataMain": "76F",
+        "iataSub": "76Y"
+      },
+      "estimatedLandingTime": "2025-12-17T05:06:58.000+01:00",
+      "flightDirection": "A",
+      "flightName": "QY1446",
+      "flightNumber": 1446,
+      "id": "143871160886930554",
+      "isOperationalFlight": true,
+      "mainFlight": "QY1446",
+      "prefixIATA": "QY",
+      "prefixICAO": "BCS",
+      "airlineCode": 289,
+      "publicFlightState": {
+        "flightStates": [
+          "FIR"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "LEJ"
+        ],
+        "eu": "S",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T05:15:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "05:15:00",
+      "serviceType": "F",
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-13T14:10:56.237+01:00",
+      "aircraftType": {
+        "iataMain": "787",
+        "iataSub": "789"
+      },
+      "codeshares": {
+        "codeshares": [
+          "AF3112",
+          "KE5925",
+          "SK6777"
+        ]
+      },
+      "estimatedLandingTime": "2025-12-17T05:12:00.000+01:00",
+      "flightDirection": "A",
+      "flightName": "SK6777",
+      "flightNumber": 6777,
+      "id": "143871161112344842",
+      "isOperationalFlight": true,
+      "mainFlight": "KL0856",
+      "prefixIATA": "SK",
+      "prefixICAO": "SAS",
+      "airlineCode": 150,
+      "publicFlightState": {
+        "flightStates": [
+          "SCH"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "ICN"
+        ],
+        "eu": "N",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T05:20:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "05:20:00",
+      "serviceType": "J",
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-17T04:48:28.494+01:00",
+      "aircraftRegistration": "OEIXR",
+      "aircraftType": {
+        "iataMain": "73F",
+        "iataSub": "73K"
+      },
+      "estimatedLandingTime": "2025-12-17T05:23:05.000+01:00",
+      "flightDirection": "A",
+      "flightName": "FX4235",
+      "flightNumber": 4235,
+      "id": "143871159357913544",
+      "isOperationalFlight": true,
+      "mainFlight": "FX4235",
+      "prefixIATA": "FX",
+      "prefixICAO": "FDX",
+      "airlineCode": 5326,
+      "publicFlightState": {
+        "flightStates": [
+          "AIR"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "CDG"
+        ],
+        "eu": "S",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T05:20:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "05:20:00",
+      "serviceType": "F",
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-17T04:53:06.842+01:00",
+      "actualLandingTime": "2025-12-17T04:51:39.000+01:00",
+      "aircraftRegistration": "PHBHM",
+      "aircraftType": {
+        "iataMain": "787",
+        "iataSub": "789"
+      },
+      "baggageClaim": {
+        "belts": [
+          "15"
+        ]
+      },
+      "codeshares": {
+        "codeshares": [
+          "AF3112",
+          "KE5925"
+        ]
+      },
+      "estimatedLandingTime": "2025-12-17T04:51:09.000+01:00",
+      "flightDirection": "A",
+      "flightName": "AF3112",
+      "flightNumber": 3112,
+      "gate": "E22",
+      "pier": "E",
+      "id": "143871158596899980",
+      "isOperationalFlight": true,
+      "mainFlight": "KL0856",
+      "prefixIATA": "AF",
+      "prefixICAO": "AFR",
+      "airlineCode": 80,
+      "publicFlightState": {
+        "flightStates": [
+          "LND",
+          "EXP"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "ICN"
+        ],
+        "eu": "N",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T05:20:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "05:20:00",
+      "serviceType": "J",
+      "terminal": 3,
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-17T04:53:06.842+01:00",
+      "actualLandingTime": "2025-12-17T04:51:39.000+01:00",
+      "aircraftRegistration": "PHBHM",
+      "aircraftType": {
+        "iataMain": "787",
+        "iataSub": "789"
+      },
+      "baggageClaim": {
+        "belts": [
+          "15"
+        ]
+      },
+      "codeshares": {
+        "codeshares": [
+          "AF3112",
+          "KE5925"
+        ]
+      },
+      "estimatedLandingTime": "2025-12-17T04:51:09.000+01:00",
+      "flightDirection": "A",
+      "flightName": "KE5925",
+      "flightNumber": 5925,
+      "gate": "E22",
+      "pier": "E",
+      "id": "143871159980255394",
+      "isOperationalFlight": true,
+      "mainFlight": "KL0856",
+      "prefixIATA": "KE",
+      "prefixICAO": "KAL",
+      "airlineCode": 105,
+      "publicFlightState": {
+        "flightStates": [
+          "LND",
+          "EXP"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "ICN"
+        ],
+        "eu": "N",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T05:20:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "05:20:00",
+      "serviceType": "J",
+      "terminal": 3,
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-17T04:53:06.842+01:00",
+      "actualLandingTime": "2025-12-17T04:51:39.000+01:00",
+      "aircraftRegistration": "PHBHM",
+      "aircraftType": {
+        "iataMain": "787",
+        "iataSub": "789"
+      },
+      "baggageClaim": {
+        "belts": [
+          "15"
+        ]
+      },
+      "codeshares": {
+        "codeshares": [
+          "AF3112",
+          "KE5925"
+        ]
+      },
+      "estimatedLandingTime": "2025-12-17T04:51:09.000+01:00",
+      "flightDirection": "A",
+      "flightName": "KL0856",
+      "flightNumber": 856,
+      "gate": "E22",
+      "pier": "E",
+      "id": "143871160005984604",
+      "isOperationalFlight": true,
+      "mainFlight": "KL0856",
+      "prefixIATA": "KL",
+      "prefixICAO": "KLM",
+      "airlineCode": 100,
+      "publicFlightState": {
+        "flightStates": [
+          "LND",
+          "EXP"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "ICN"
+        ],
+        "eu": "N",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T05:20:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "05:20:00",
+      "serviceType": "J",
+      "terminal": 3,
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-17T03:55:02.220+01:00",
+      "aircraftRegistration": "PHBVW",
+      "aircraftType": {
+        "iataMain": "777",
+        "iataSub": "77W"
+      },
+      "baggageClaim": {
+        "belts": [
+          "17"
+        ]
+      },
+      "codeshares": {
+        "codeshares": [
+          "AF8248",
+          "DL9373"
+        ]
+      },
+      "estimatedLandingTime": "2025-12-17T05:46:00.000+01:00",
+      "flightDirection": "A",
+      "flightName": "KL0590",
+      "flightNumber": 590,
+      "gate": "F3",
+      "pier": "F",
+      "id": "143871160005976674",
+      "isOperationalFlight": true,
+      "mainFlight": "KL0590",
+      "prefixIATA": "KL",
+      "prefixICAO": "KLM",
+      "airlineCode": 100,
+      "publicFlightState": {
+        "flightStates": [
+          "AIR"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "ACC"
+        ],
+        "eu": "N",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T05:45:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "05:45:00",
+      "serviceType": "J",
+      "terminal": 3,
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-17T03:55:02.220+01:00",
+      "aircraftRegistration": "PHBVW",
+      "aircraftType": {
+        "iataMain": "777",
+        "iataSub": "77W"
+      },
+      "baggageClaim": {
+        "belts": [
+          "17"
+        ]
+      },
+      "codeshares": {
+        "codeshares": [
+          "AF8248",
+          "DL9373"
+        ]
+      },
+      "estimatedLandingTime": "2025-12-17T05:46:00.000+01:00",
+      "flightDirection": "A",
+      "flightName": "AF8248",
+      "flightNumber": 8248,
+      "gate": "F3",
+      "pier": "F",
+      "id": "143871158597409482",
+      "isOperationalFlight": true,
+      "mainFlight": "KL0590",
+      "prefixIATA": "AF",
+      "prefixICAO": "AFR",
+      "airlineCode": 80,
+      "publicFlightState": {
+        "flightStates": [
+          "AIR"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "ACC"
+        ],
+        "eu": "N",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T05:45:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "05:45:00",
+      "serviceType": "J",
+      "terminal": 3,
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-17T03:55:02.220+01:00",
+      "aircraftRegistration": "PHBVW",
+      "aircraftType": {
+        "iataMain": "777",
+        "iataSub": "77W"
+      },
+      "baggageClaim": {
+        "belts": [
+          "17"
+        ]
+      },
+      "codeshares": {
+        "codeshares": [
+          "AF8248",
+          "DL9373"
+        ]
+      },
+      "estimatedLandingTime": "2025-12-17T05:46:00.000+01:00",
+      "flightDirection": "A",
+      "flightName": "DL9373",
+      "flightNumber": 9373,
+      "gate": "F3",
+      "pier": "F",
+      "id": "143871159036067412",
+      "isOperationalFlight": true,
+      "mainFlight": "KL0590",
+      "prefixIATA": "DL",
+      "prefixICAO": "DAL",
+      "airlineCode": 58,
+      "publicFlightState": {
+        "flightStates": [
+          "AIR"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "ACC"
+        ],
+        "eu": "N",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T05:45:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "05:45:00",
+      "serviceType": "J",
+      "terminal": 3,
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-17T04:21:01.605+01:00",
+      "aircraftRegistration": "N431DX",
+      "aircraftType": {
+        "iataMain": "330",
+        "iataSub": "339"
+      },
+      "baggageClaim": {
+        "belts": [
+          "16"
+        ]
+      },
+      "codeshares": {
+        "codeshares": [
+          "AF5591",
+          "KL6070",
+          "VS3928"
+        ]
+      },
+      "estimatedLandingTime": "2025-12-17T06:11:59.000+01:00",
+      "flightDirection": "A",
+      "flightName": "DL0046",
+      "flightNumber": 46,
+      "gate": "G8",
+      "pier": "G",
+      "id": "143871159035147228",
+      "isOperationalFlight": true,
+      "mainFlight": "DL0046",
+      "prefixIATA": "DL",
+      "prefixICAO": "DAL",
+      "airlineCode": 58,
+      "publicFlightState": {
+        "flightStates": [
+          "AIR",
+          "EXP"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "JFK"
+        ],
+        "eu": "N",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T05:55:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "05:55:00",
+      "serviceType": "J",
+      "terminal": 3,
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-17T04:21:01.605+01:00",
+      "aircraftRegistration": "N431DX",
+      "aircraftType": {
+        "iataMain": "330",
+        "iataSub": "339"
+      },
+      "baggageClaim": {
+        "belts": [
+          "16"
+        ]
+      },
+      "codeshares": {
+        "codeshares": [
+          "AF5591",
+          "KL6070",
+          "VS3928"
+        ]
+      },
+      "estimatedLandingTime": "2025-12-17T06:11:59.000+01:00",
+      "flightDirection": "A",
+      "flightName": "AF5591",
+      "flightNumber": 5591,
+      "gate": "G8",
+      "pier": "G",
+      "id": "143871158597114134",
+      "isOperationalFlight": true,
+      "mainFlight": "DL0046",
+      "prefixIATA": "AF",
+      "prefixICAO": "AFR",
+      "airlineCode": 80,
+      "publicFlightState": {
+        "flightStates": [
+          "AIR",
+          "EXP"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "JFK"
+        ],
+        "eu": "N",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T05:55:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "05:55:00",
+      "serviceType": "J",
+      "terminal": 3,
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-17T04:21:01.605+01:00",
+      "aircraftRegistration": "N431DX",
+      "aircraftType": {
+        "iataMain": "330",
+        "iataSub": "339"
+      },
+      "baggageClaim": {
+        "belts": [
+          "16"
+        ]
+      },
+      "codeshares": {
+        "codeshares": [
+          "AF5591",
+          "KL6070",
+          "VS3928"
+        ]
+      },
+      "estimatedLandingTime": "2025-12-17T06:11:59.000+01:00",
+      "flightDirection": "A",
+      "flightName": "KL6070",
+      "flightNumber": 6070,
+      "gate": "G8",
+      "pier": "G",
+      "id": "143871160006570672",
+      "isOperationalFlight": true,
+      "mainFlight": "DL0046",
+      "prefixIATA": "KL",
+      "prefixICAO": "KLM",
+      "airlineCode": 100,
+      "publicFlightState": {
+        "flightStates": [
+          "AIR",
+          "EXP"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "JFK"
+        ],
+        "eu": "N",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T05:55:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "05:55:00",
+      "serviceType": "J",
+      "terminal": 3,
+      "schemaVersion": "4"
+    },
+    {
+      "lastUpdatedAt": "2025-12-17T04:21:01.605+01:00",
+      "aircraftRegistration": "N431DX",
+      "aircraftType": {
+        "iataMain": "330",
+        "iataSub": "339"
+      },
+      "baggageClaim": {
+        "belts": [
+          "16"
+        ]
+      },
+      "codeshares": {
+        "codeshares": [
+          "AF5591",
+          "KL6070",
+          "VS3928"
+        ]
+      },
+      "estimatedLandingTime": "2025-12-17T06:11:59.000+01:00",
+      "flightDirection": "A",
+      "flightName": "VS3928",
+      "flightNumber": 3928,
+      "gate": "G8",
+      "pier": "G",
+      "id": "143871161558096350",
+      "isOperationalFlight": true,
+      "mainFlight": "DL0046",
+      "prefixIATA": "VS",
+      "prefixICAO": "VIR",
+      "airlineCode": 181,
+      "publicFlightState": {
+        "flightStates": [
+          "AIR",
+          "EXP"
+        ]
+      },
+      "route": {
+        "destinations": [
+          "JFK"
+        ],
+        "eu": "N",
+        "visa": false
+      },
+      "scheduleDateTime": "2025-12-17T05:55:00.000+01:00",
+      "scheduleDate": "2025-12-17",
+      "scheduleTime": "05:55:00",
+      "serviceType": "J",
+      "terminal": 3,
+      "schemaVersion": "4"
+    }
+  ]
+}

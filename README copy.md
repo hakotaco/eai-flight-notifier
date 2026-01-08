@@ -1,122 +1,56 @@
-# AMS Flight Ingestion & Notification System
-
-This project is a microservices-based system designed to ingest flight data from the Schiphol API, process updates via RabbitMQ, and notify users about flight delays through a full-stack application.
-
-## Project Structure
-
-```text
-.
-├── schiphol-api/       # Flight Data Ingestion Service (Source of Truth)
-├── backend/            # User Notification Service (Express/Node.js logic)
-├── frontend/           # Web Application (Next.js)
-├── terraform/          # Infrastructure as Code (RabbitMQ Configuration)
-├── sql/                # Database Initialization Scripts
-├── docker-compose.yaml # Container Orchestration
-├── package.json        # Root workspace scripts
-└── .env                # Global Environment Variables
-```
-
-## Prerequisites
-
--   Docker or Podman installed.
--   Bun (v1.1.0 or higher) for JavaScript Runtime.
+# Demo ams-flight-ingestion
 
 ## Operation
 
 ### A. How to set up
 
 1. Clone this repository
-2. Environment Initialization
-
-    The following command copies the `.env.example` file to `.env` in the root directory and establishes symbolic links for all sub-services (`schiphol-api`, `backend`, `frontend`) to ensure a SSoT for configuration.
+2. Create a `.env` file in the root directory
 
     ```bash
-    bun run setup
+    cp -n ".env.example" ".env"
     ```
 
-    Configuration Required: After initialization, the `.env` file in the root directory must be populated with valid credentials, specifically `SCHIPHOL_APP_ID` and `SCHIPHOL_APP_KEY`.
+    And remember to fill in the API key in the `.env` file.
 
     **DO NOT fill in the API key in the `.env.example` file.**
 
-3. Infrastructure & Application Startup
+3. Start the container.
 
-    The command below utilizes Docker Compose profiles to initialize all services, including the database, message queue, ingestion worker, backend API, and frontend application.
-
-    ```bash
-    bun run dev
-    ```
-
-    Upon successful execution, the following services will be available:
-
-    - **Frontend**: http://localhost:3001
-    - **Backend API**: http://localhost:3000
-    - **RabbitMQ Console**: http://localhost:15672 (Credentials are defined in `.env`)
-
-4. Infrastructure & Application Shutdown
-
-    The command below shuts down all services.
+    Since Terraform has been integrated into the container, `terraform init &&terraform apply` will be executed automatically.
 
     ```bash
-    bun run stop
+    docker compose up -d
     ```
 
-    The command below shuts down all services and removes volumes.
+4. Install dependencies
 
     ```bash
-    bun run clean
+    bun install
     ```
 
-## Development Workflow
-
-A _Hybrid_ development workflow is adopted to maximize developer efficiency. Infrastructure components run within Docker containers, while application code is executed natively on the host machine to facilitate features such as Hot Module Replacement and Intellisense.
-
-### Service Orchestration
-
-The system is divided into two operational profiles:
-
--   Infra Profile: Core infrastructure (PostgreSQL, RabbitMQ, Terraform).
--   App Profile: Application containers (Ingestion, Backend, Frontend).
-
-### Independent Service Development
-
-To develop specific services natively while maintaining connectivity to the containerized infrastructure:
-
-1. Initialize Infrastructure Only:
+5. Run the script
 
     ```bash
-    docker compose --profile infra up -d
+    bun run src/index.ts
     ```
 
-2. Execute Services Natively:
+### B. How to stop
 
-    - Schiphol API (Ingestion):
+1. Stop the container
 
-        ```bash
-        cd schiphol-api && bun dev
-        ```
+    ```bash
+    docker compose down
+    ```
 
-    - Backend (Express.js):
+2. Destroy Terraform Resources for troubleshooting. e.g. DNS issue.
 
-        ```bash
-        cd backend && bun dev
-        ```
+    ```bash
+    docker exec -it flight_terraform terraform destroy -auto-approve
+    docker compose down -v
+    ```
 
-    - Frontend (Next.js):
-
-        ```bash
-        cd frontend && bun dev
-        ```
-
-### Service Reference
-
-| Service     | Container Name             | Host Port | Internal Port | Description                                                              |
-| ----------- | -------------------------- | --------- | ------------- | ------------------------------------------------------------------------ |
-| PostgreSQL  | `flight_db`                | `5432`    | `5432`        | Persists flight data (flight_ingestion) and user data (flight_notifier). |
-| RabbitMQ    | `flight_mq`                | `5672`    | `5672`        | AMQP Protocol Port for inter-service communication.                      |
-| RabbitMQ UI | `flight_mq`                | `15672`   | `15672`       | Web-based management interface.                                          |
-| Ingestion   | `flight_schiphol_api`      | N/A       | N/A           | Background worker service; exposes no HTTP port.                         |
-| Backend     | `flight_notifier_backend`  | `3000`    | `3000`        | Express.js API handling user logic and notifications.                    |
-| Frontend    | `flight_notifier_frontend` | `3001`    | `3001`        | Next.js web application.                                                 |
+    Then restart the container with `--build` option.
 
 ## Flight Tracking Database
 
@@ -160,19 +94,13 @@ To develop specific services natively while maintaining connectivity to the cont
 
 ### Validate if the Database is Populated
 
-1.  Retrieve the list of databases
-
-    ```bash
-    docker exec -it flight_db psql -U admin -d postgres -c "\l"
-    ```
-
-2.  Enter into the `psql` database in Docker
+1. Enter into the `psql` database in Docker
 
     ```bash
     docker exec -it flight_db psql -U admin -d flight_ingestion
     ```
 
-3.  Evaluate if the table has records (in `psql`)
+2. Evaluate if the table has records (in `psql`)
 
     ```sql
     SELECT "mainFlight", "lastUpdatedAt", "lastCheckedAt" FROM flight_state ORDER BY "lastCheckedAt" DESC;
@@ -180,7 +108,7 @@ To develop specific services natively while maintaining connectivity to the cont
 
     Wait for the cron job to run, then reexecute the command above to evaluate if the table has updated the records. The `lastCheckedAt` should be updated.
 
-4.  Health Check (in `psql`)
+3. Health Check (in `psql`)
 
     This query is used to confirm whether the syncFlights job is running. If time_since_last_check is too large, it may indicate that the Cron Job has failed.
 
@@ -193,7 +121,7 @@ To develop specific services natively while maintaining connectivity to the cont
     FROM flight_state;
     ```
 
-5.  Examine Delay Dashboard (in `psql`)
+4. Examine Delay Dashboard (in `psql`)
 
     This is used for examining delay flights. It is similar to the `DelayCalculator` logic in the application, selecting flights with a delay of more than 15 minutes. These flights are theoretically expected to trigger RabbitMQ events.
 
@@ -208,18 +136,12 @@ To develop specific services natively while maintaining connectivity to the cont
     ORDER BY delay_minutes DESC;
     ```
 
-6.  To confirm that delay notifications are being propagated to RabbitMQ
+5. If there are delayed flights, the number of messages in the `flight.delay_notifications` queue will increase. You can use the `watch` command to view it.
+
+    **Note: These parameters should correspond to the Terraform logic (`flight-mq`, `flight_ops`) and .env file (`MQ_USER`, `MQ_PASS`) settings**
 
     ```bash
-    docker exec -it flight_mq rabbitmqctl list_queues -p flight_ops
-    ```
-
-7.  If there are delayed flights, the number of messages in the `flight.delay_notifications` queue will increase. View it using the `watch` command.
-
-    **Note: These parameters should correspond to the Terraform logic (`flight_mq`, `flight_ops`) and .env file (`MQ_USER`, `MQ_PASS`) settings**
-
-    ```bash
-    watch "docker exec -it flight_mq rabbitmqctl list_queues -p flight_ops"
+    watch docker exec -it flight-mq ${MQ_USER} -p ${MQ_PASS} -V flight_ops list queues
     ```
 
     The output should be something like this
@@ -232,21 +154,7 @@ To develop specific services natively while maintaining connectivity to the cont
     +----------------------------+----------+
     ```
 
-8.  In instances where RabbitMQ exchanges or queues fail to initialize correctly, the Terraform state may be reset
-
-    a. To destroy existing resources
-
-        ```bash
-        docker exec -it flight_terraform terraform destroy -auto-approve
-        ```
-
-    b. To re-provision resources via container restart
-
-        ```bash
-        docker compose up -d terraform
-        ```
-
-### Schiphol API Unit Tests
+### Unit Tests
 
 1. Switch to the project directory
 2. Run unit tests
