@@ -1,118 +1,285 @@
-# Flight Delay Notifier - Multi-Service Project
+# AMS Flight Ingestion & Notification System
 
-This project contains multiple services for the flight delay notification system.
+This project is a microservices-based system designed to ingest flight data from the Schiphol API, process updates via RabbitMQ, and notify users about flight delays through a full-stack application.
 
 ## Project Structure
 
-```
-eai-central/
-├── docker-compose.yml          # Orchestrates all services
-├── backend/                    # Central service API
-│   ├── src/                   # TypeScript source code
-│   ├── package.json           # Backend dependencies
-│   ├── tsconfig.json          # TypeScript config
-│   ├── Dockerfile             # Backend container
-│   └── init.sql               # Database schema
-├── frontend/                   # Next.js web application
-│   ├── app/                   # Next.js app router
-│   ├── package.json           # Frontend dependencies
-│   └── Dockerfile             # Frontend container
-└── diagram/                    # UML diagrams (PlantUML/Mermaid)
+```text
+.
+├── schiphol-api/       # Flight Data Ingestion Service (Source of Truth)
+├── backend/            # User Notification Service (Express/Node.js logic)
+├── frontend/           # Web Application (Next.js)
+├── terraform/          # Infrastructure as Code (RabbitMQ Configuration)
+├── sql/                # Database Initialization Scripts
+├── docker-compose.yaml # Container Orchestration
+├── package.json        # Root workspace scripts
+└── .env                # Global Environment Variables
 ```
 
-## Services
+## Prerequisites
 
-### Running Services
+-   Docker or Podman installed.
+-   Bun (v1.1.0 or higher) for JavaScript Runtime.
 
-All services are orchestrated via Docker Compose from the root directory:
+## Operation
 
-```bash
-# Start all services
-docker compose up
+### A. How to set up
 
-# Start in detached mode
-docker compose up -d
+1. Clone this repository
+2. Environment Initialization
 
-# Rebuild and start
-docker compose up --build
+    The following command copies the `.env.example` file to `.env` in the root directory and establishes symbolic links for all sub-services (`schiphol-api`, `backend`, `frontend`) to ensure a SSoT for configuration.
 
-# Stop all services
-docker compose down
+    ```bash
+    bun run setup
+    ```
 
-# View logs
-docker compose logs [service-name]
-```
+    Configuration Required: After initialization, the `.env` file in the root directory must be populated with valid credentials, specifically `SCHIPHOL_APP_ID` and `SCHIPHOL_APP_KEY`.
 
-### Current Services
+    **DO NOT fill in the API key in the `.env.example` file.**
 
-1. **Backend (Central Service)** - Port 3000
-   - Express.js API with TypeScript
-   - Handles user signup and flight registration
-   - Consumes RabbitMQ messages from external services
-   - PostgreSQL database for persistence
+3. Infrastructure & Application Startup
 
-2. **Frontend** - Port 3001
-   - Next.js 14 with React Server Components
-   - Tailwind CSS styling
-   - User signup form
+    The command below utilizes Docker Compose profiles to initialize all services, including the database, message queue, ingestion worker, backend API, and frontend application.
 
-3. **PostgreSQL** - Port 5432
-   - User and flight data storage
-   - Notification schedules
+    ```bash
+    bun run dev
+    ```
 
-4. **RabbitMQ** - Ports 5672, 15672
-   - Message queue for flight and traffic updates
-   - Management UI at http://localhost:15672
+    Upon successful execution, the following services will be available:
 
-## Quick Start
+    - **Frontend**: http://localhost:3001
+    - **Backend API**: http://localhost:3000
+    - **RabbitMQ Console**: http://localhost:15672 (Credentials are defined in `.env`)
 
-```bash
-# From project root
-docker compose up
+4. Infrastructure & Application Shutdown
 
-# Access services
-# - Frontend: http://localhost:3001
-# - Backend API: http://localhost:3000
-# - RabbitMQ Management: http://localhost:15672 (guest/guest)
-```
+    The command below shuts down all services.
 
-## Adding New Services
+    ```bash
+    bun run stop
+    ```
 
-To add a new service (e.g., Schiphol polling service, Google Maps service):
+    The command below shuts down all services and removes volumes.
 
-1. Create a new folder in the root: `mkdir schiphol-service`
-2. Add your service code and Dockerfile
-3. Update `docker-compose.yml` to include the new service:
+    ```bash
+    bun run clean
+    ```
 
-```yaml
-  schiphol-service:
-    build:
-      context: ./schiphol-service
-      dockerfile: Dockerfile
-    depends_on:
-      - rabbitmq
-    environment:
-      RABBITMQ_URL: amqp://rabbitmq:5672
-```
+## Development Workflow
 
-## Development
+A _Hybrid_ development workflow is adopted to maximize developer efficiency. Infrastructure components run within Docker containers, while application code is executed natively on the host machine to facilitate features such as Hot Module Replacement and Intellisense.
 
-Each service can be developed independently:
+### Service Orchestration
 
-### Backend Development
-```bash
-cd backend
-npm install
-npm run dev  # Runs on port 3000
-```
+The system is divided into two operational profiles:
 
-### Frontend Development
-```bash
-cd frontend
-npm install
-npm run dev  # Runs on port 3001
-```
+-   Infra Profile: Core infrastructure (PostgreSQL, RabbitMQ, Terraform).
+-   App Profile: Application containers (Ingestion, Backend, Frontend).
 
-## Environment Variables
+### Independent Service Development
 
-Each service has its own `.env.example` file. Copy to `.env` or set via docker-compose.yml.
+To develop specific services natively while maintaining connectivity to the containerized infrastructure:
+
+1. Initialize Infrastructure Only:
+
+    ```bash
+    docker compose --profile infra up -d
+    ```
+
+2. Execute Services Natively:
+
+    - Schiphol API (Ingestion):
+
+        ```bash
+        cd schiphol-api && bun dev
+        ```
+
+    - Backend (Express.js):
+
+        ```bash
+        cd backend && bun dev
+        ```
+
+    - Frontend (Next.js):
+
+        ```bash
+        cd frontend && bun dev
+        ```
+
+### Service Reference
+
+| Service     | Container Name             | Host Port | Internal Port | Description                                                              |
+| ----------- | -------------------------- | --------- | ------------- | ------------------------------------------------------------------------ |
+| PostgreSQL  | `flight_db`                | `5432`    | `5432`        | Persists flight data (flight_ingestion) and user data (flight_notifier). |
+| RabbitMQ    | `flight_mq`                | `5672`    | `5672`        | AMQP Protocol Port for inter-service communication.                      |
+| RabbitMQ UI | `flight_mq`                | `15672`   | `15672`       | Web-based management interface.                                          |
+| Ingestion   | `flight_schiphol_api`      | N/A       | N/A           | Background worker service; exposes no HTTP port.                         |
+| Backend     | `flight_notifier_backend`  | `3000`    | `3000`        | Express.js API handling user logic and notifications.                    |
+| Frontend    | `flight_notifier_frontend` | `3001`    | `3001`        | Next.js web application.                                                 |
+
+## Flight Tracking Database
+
+### Table Schema
+
+| **Column**         | **Type**    | **Usage**                                                                                     |
+| ------------------ | ----------- | --------------------------------------------------------------------------------------------- |
+| `id`               | VARCHAR(50) | Primary Key, corresponding to Schiphol API's id                                               |
+| `mainFlight`       | VARCHAR(20) | Business Key (Index), used for deduplication and linking historical records (e.g.`KL0808`)    |
+| `flightName`       | VARCHAR(20) | Display flight number, corresponding to the name on the ticket (e.g.`KL808`)                  |
+| `flightDirection`  | VARCHAR(1)  | A (Arrival) or D (Departure), determines time logic and notification type                     |
+| `scheduleDate`     | VARCHAR(10) | Partition Key (Index), used for querying flights on specific dates (YYYY-MM-DD)               |
+| `scheduleDateTime` | TIMESTAMPTZ | T0 (baseline time): scheduled time (STD/STA)                                                  |
+| `estimatedTime`    | TIMESTAMPTZ | T1 (estimated time): normalized estimated time (Arr: ELDT, Dep: ETD)                          |
+| `actualTime`       | TIMESTAMPTZ | T2 (actual time): normalized actual time (Arr: ALDT, Dep: ATD)                                |
+| `lastUpdatedAt`    | TIMESTAMPTZ | Last update time from the data source (API), prevents processing stale data                   |
+| `lastCheckedAt`    | TIMESTAMPTZ | Last checked time from the cron job to evaluate if application works as expected.             |
+| `flightStates`     | TEXT        | Status tag array (comma-separated), such as EXP,ARR                                           |
+| `gate`             | VARCHAR(10) | Boarding gate/arrival gate, used for detecting gate changes                                   |
+| `terminal`         | INTEGER     | Terminal number                                                                               |
+| `route`            | JSONB       | Stores destination array, EU status (eu), visa requirements (visa), and other structured data |
+| `baggageClaim`     | JSONB       | Stores baggage carousel array (belts)                                                         |
+| `createdAt`        | TIMESTAMPTZ | Records the time when this record was first created                                           |
+| `updatedAt`        | TIMESTAMPTZ | Records the time when this record's status was last changed                                   |
+
+### Validate if the Database is Established
+
+1. Evaluate if the table exists
+
+    ```bash
+    docker exec -it flight_db psql -U admin -d flight_ingestion -c "\dt"
+    ```
+
+2. Evaluate if the table has the correct schema
+
+    ```bash
+    docker exec -it flight_db psql -U admin -d flight_ingestion -c "\d flight_state"
+    ```
+
+    The default column names of TypeORM may be camelCase `lastDelayMinutes` or snake_case `last_delay_minutes`, please refer to the result of `\d`.
+
+### Validate if the Database is Populated
+
+1.  Retrieve the list of databases
+
+    ```bash
+    docker exec -it flight_db psql -U admin -d postgres -c "\l"
+    ```
+
+2.  Enter into the `psql` database in Docker
+
+    ```bash
+    docker exec -it flight_db psql -U admin -d flight_ingestion
+    ```
+
+3.  Evaluate if the table has records (in `psql`)
+
+    ```sql
+    SELECT "mainFlight", "lastUpdatedAt", "lastCheckedAt" FROM flight_state ORDER BY "lastCheckedAt" DESC;
+    ```
+
+    Wait for the cron job to run, then reexecute the command above to evaluate if the table has updated the records. The `lastCheckedAt` should be updated.
+
+4.  Health Check (in `psql`)
+
+    This query is used to confirm whether the syncFlights job is running. If time_since_last_check is too large, it may indicate that the Cron Job has failed.
+
+    ```sql
+    SELECT
+        COUNT(*) AS total_records,
+        MAX("lastCheckedAt") AS last_sync_timestamp,
+        NOW() - MAX("lastCheckedAt") AS time_since_last_check,
+        COUNT(*) FILTER (WHERE "actualTime" IS NOT NULL) AS completed_flights
+    FROM flight_state;
+    ```
+
+5.  Examine Delay Dashboard (in `psql`)
+
+    This is used for examining delay flights. It is similar to the `DelayCalculator` logic in the application, selecting flights with a delay of more than 15 minutes. These flights are theoretically expected to trigger RabbitMQ events.
+
+    ```sql
+    SELECT "mainFlight", "flightDirection" AS dir, "scheduleDateTime",  "actualTime",
+        FLOOR(EXTRACT(EPOCH FROM ("actualTime" - "scheduleDateTime")) / 60) AS delay_minutes,
+        "route"->'destinations' AS destinations, "lastUpdatedAt"
+    FROM flight_state
+    WHERE
+        "actualTime" IS NOT NULL
+        AND "actualTime" > "scheduleDateTime" + INTERVAL '15 minutes'
+    ORDER BY delay_minutes DESC;
+    ```
+
+6.  To confirm that delay notifications are being propagated to RabbitMQ
+
+    ```bash
+    docker exec -it flight_mq rabbitmqctl list_queues -p flight_ops
+    ```
+
+7.  If there are delayed flights, the number of messages in the `flight.delay_notifications` queue will increase. View it using the `watch` command.
+
+    **Note: These parameters should correspond to the Terraform logic (`flight_mq`, `flight_ops`) and .env file (`MQ_USER`, `MQ_PASS`) settings**
+
+    ```bash
+    watch "docker exec -it flight_mq rabbitmqctl list_queues -p flight_ops"
+    ```
+
+    The output should be something like this
+
+    ```
+    +----------------------------+----------+
+    |            name            | messages |
+    +----------------------------+----------+
+    | flight.delay_notifications | 1725     |
+    +----------------------------+----------+
+    ```
+
+8.  In instances where RabbitMQ exchanges or queues fail to initialize correctly, the Terraform state may be reset
+
+    a. To destroy existing resources
+
+        ```bash
+        docker exec -it flight_terraform terraform destroy -auto-approve
+        ```
+
+    b. To re-provision resources via container restart
+
+        ```bash
+        docker compose up -d terraform
+        ```
+
+### Schiphol API Unit Tests
+
+1. Switch to the project directory
+2. Run unit tests
+
+    ```bash
+    bun test          # Run once
+    bun test --watch  # Run in background
+    ```
+
+    To test a specific file, add the file path, like
+
+    ```bash
+    bun test "./test/config/flight-schema.test.ts" --watch
+    ```
+
+    The terminal will show something akin to the following
+
+    ```latex
+    bun test v1.2.18 (0d4089ea)
+
+    test/config/flight-schema.test.ts:
+    ✓ Schiphol API Schema Validation > should parse the probed raw data successfully [5.13ms]
+    ✓ Schiphol API Schema Validation > should fail when critical identity fields are missing [0.81ms]
+    ✓ Schiphol API Schema Validation > should handle nullable fields correctly. e.g. Gate/Terminal [0.08ms]
+    ...
+    ✓ ChangeDetection > returns true if flight became delayed from on-time [0.01ms]
+    ✓ ChangeDetection > returns false if delay is same
+    ✓ ChangeDetection > returns false if both are 0 (on time)
+
+    28 pass
+    0 fail
+    58 expect() calls
+    Ran 28 tests across 4 files. [228.00ms]
+    ```
+
+    In normal circumstances, it should always display `pass`, if it fails, it means the code has a logical error that needs to be fixed. This will serve as a reference for future development "why correct".

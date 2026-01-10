@@ -1,8 +1,13 @@
+import 'reflect-metadata';
 import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import db from './config/database';
+import { AppDataSource, initializeDatabase } from './config/database';
 import rabbitmqService from './services/rabbitmq.service';
+import {
+  handleFlightUpdate,
+  handleTrafficUpdate,
+} from './controllers/flight.controller';
 
 // Load environment variables
 dotenv.config();
@@ -28,7 +33,9 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 app.get('/health', async (_req: Request, res: Response) => {
   try {
     // Check database connection
-    await db.query('SELECT 1');
+    if (!AppDataSource.isInitialized) {
+      throw new Error('Database not initialized');
+    }
     
     res.json({
       status: 'healthy',
@@ -85,9 +92,8 @@ app.use((req: Request, res: Response) => {
 // Initialize services and start server
 async function startServer() {
   try {
-    // Test database connection
-    console.log('Testing database connection...');
-    await db.query('SELECT NOW()');
+    // Initialize database
+    await initializeDatabase();
     console.log('Database connected successfully');
 
     // Connect to RabbitMQ
@@ -96,12 +102,12 @@ async function startServer() {
     // Start consuming messages from queues
     rabbitmqService.consumeFlightUpdates(async (message) => {
       console.log('Received flight update:', message);
-      // TODO: Implement flight update processing logic
+      await handleFlightUpdate(message);
     });
 
     rabbitmqService.consumeTrafficUpdates(async (message) => {
       console.log('Received traffic update:', message);
-      // TODO: Implement traffic update processing logic
+      await handleTrafficUpdate(message);
     });
 
     // Start Express server
@@ -120,14 +126,18 @@ async function startServer() {
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received. Shutting down gracefully...');
   await rabbitmqService.close();
-  await db.end();
+  if (AppDataSource.isInitialized) {
+    await AppDataSource.destroy();
+  }
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
   console.log('SIGINT received. Shutting down gracefully...');
   await rabbitmqService.close();
-  await db.end();
+  if (AppDataSource.isInitialized) {
+    await AppDataSource.destroy();
+  }
   process.exit(0);
 });
 
