@@ -115,9 +115,9 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASS}
-      RABBITMQ_URL: amqp://${MQ_USER}:${MQ_PASS}@mq:5672
-      FLIGHT_UPDATES_QUEUE: flight_updates
-      TRAFFIC_UPDATES_QUEUE: traffic_updates
+      RABBITMQ_URL: amqp://${MQ_USER}:${MQ_PASS}@mq:5672/flight_ops
+      FLIGHT_UPDATES_QUEUE: flight.delay_notifications
+      TRAFFIC_UPDATES_QUEUE: traffic_updates # WIP: modify according to the traffic updates queue name.
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
     command: sh -c "bun install && tail -f /dev/null"
