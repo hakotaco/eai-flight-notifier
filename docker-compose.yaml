@@ -1,0 +1,155 @@
+---
+services:
+  db: # https://hub.docker.com/_/postgres
+    profiles: ["infra"]
+    image: postgres:18-alpine
+    container_name: flight_db
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: postgres # default database.
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+    networks:
+      - flight_net
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${DB_USER}", "-d", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mq: # https://hub.docker.com/_/rabbitmq
+    profiles: ["infra"]
+    image: rabbitmq:4.1.6-management
+    container_name: flight_mq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${MQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${MQ_PASS}
+      RABBITMQ_ERLANG_COOKIE: ${MQ_ERLANG_COOKIE}
+    user: "999:999"
+    ports:
+      - "${MQ_PORT}:5672" # AMQP Protocal Port
+      - "${MQ_MANAGEMENT_PORT}:15672" # Web UI
+    volumes:
+      - mq_data:/var/lib/rabbitmq:Z # Z for SELinux
+    networks:
+      - flight_net
+    depends_on:
+      db:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  terraform:
+    profiles: ["infra"]
+    build: .
+    container_name: flight_terraform
+    environment:
+      - TF_VAR_mq_host=mq
+      - TF_VAR_mq_management_port=15672
+      - TF_VAR_mq_user=${MQ_USER}
+      - TF_VAR_mq_pass=${MQ_PASS}
+    volumes:
+      - ./terraform:/app/terraform:Z
+    networks:
+      - flight_net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f -u $${TF_VAR_mq_user}:$${TF_VAR_mq_pass} http://mq:15672/api/vhosts/flight_ops || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      mq:
+        condition: service_healthy
+
+  schiphol-api:
+    profiles: ["app"]
+    build:
+      context: ./schiphol-api
+      dockerfile: Dockerfile
+    container_name: flight_schiphol_api
+    volumes:
+      - ./schiphol-api:/app
+    command: sh -c "bun install && tail -f /dev/null"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: flight_ingestion
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      MQ_HOST: mq
+      SCHIPHOL_APP_ID: ${SCHIPHOL_APP_ID}
+      SCHIPHOL_APP_KEY: ${SCHIPHOL_APP_KEY}
+      SCHIPHOL_API_URL: ${SCHIPHOL_API_URL}
+    networks:
+      - flight_net
+    depends_on:
+      db:
+        condition: service_healthy
+      mq:
+        condition: service_healthy
+
+  backend:
+    profiles: ["app"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: flight_notifier_backend
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DB_HOST: db
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASS}
+      RABBITMQ_URL: amqp://${MQ_USER}:${MQ_PASS}@mq:5672
+      FLIGHT_UPDATES_QUEUE: flight_updates
+      TRAFFIC_UPDATES_QUEUE: traffic_updates
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+    command: sh -c "bun install && tail -f /dev/null"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      mq:
+        condition: service_healthy
+
+  # Frontend Application
+  frontend:
+    profiles: ["app"]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: flight_notifier_frontend
+    ports:
+      - "3001:3001"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+    volumes:
+      - ./frontend:/app
+    command: sh -c "bun install && tail -f /dev/null"
+    depends_on:
+      - backend
+
+volumes:
+  pg_data:
+  mq_data:
+
+networks:
+  flight_net:
+    driver: bridge

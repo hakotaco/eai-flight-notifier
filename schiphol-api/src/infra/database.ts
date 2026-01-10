@@ -1,21 +1,20 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
-import { User } from "../entities/User";
-import { Flight } from "../entities/Flight";
-import { UserFlightSubscription } from "../entities/UserFlightSubscription";
+import { FlightState } from "../core/entities/FlightState";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 export const AppDataSource = new DataSource({
+  // [1], [2]
   type: "postgres",
-  host: process.env.DB_HOST || "localhost",
+  host: process.env.DB_HOST,
   port: parseInt(process.env.DB_PORT || "5432", 10),
-  username: process.env.DB_USER || "postgres",
-  password: process.env.DB_PASSWORD || "postgres",
-  database: process.env.DB_NAME || "flight_notifier",
+  username: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
   synchronize: true,
-  entities: [User, Flight, UserFlightSubscription],
+  entities: [FlightState],
   logging: false,
   subscribers: [],
   migrations: [],
@@ -23,6 +22,7 @@ export const AppDataSource = new DataSource({
 
 export const initializeDatabase = async () => {
   try {
+    // [3]
     if (!AppDataSource.isInitialized) {
       console.log("Initializing TypeORM DataSource...");
       await AppDataSource.initialize();
@@ -33,3 +33,9 @@ export const initializeDatabase = async () => {
     throw error;
   }
 };
+
+/**
+ * [1] https://typeorm.io/docs/data-source/data-source
+ * [2] https://typeorm.io/docs/data-source/data-source-options
+ * [3] https://typeorm.io/docs/data-source/data-source-api
+ */

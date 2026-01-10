@@ -1,3 +1,13 @@
+
+-- section 1. create databases
+create database flight_ingestion;
+create database flight_notifier;
+
+-- section 2. connect to flight_notifier
+\c flight_notifier;
+
+-- section 3. create tables below
+
 -- Create Users table
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
