@@ -18,46 +18,52 @@ export const handleFlightUpdate = async (
     const subscriptionRepository =
       AppDataSource.getRepository(UserFlightSubscription);
 
-    // Find the flight
-    const flight = await flightRepository.findOne({
-      where: { id: message.flightId },
+    // First check if anyone is subscribed to this flight
+    const subscriptions = await subscriptionRepository.find({
+      where: { flightId: message.flightId },
     });
 
-    if (!flight) {
-      console.error(`Flight not found: ${message.flightId}`);
+    if (subscriptions.length === 0) {
+      console.log(
+        `No users subscribed to flight ${message.flightNumber}, skipping update`
+      );
       return;
     }
-
-    // Update flight information based on update type
-    switch (message.updateType) {
-      case "DELAY":
-      case "TIME_CHANGE":
-        if (message.newValue) {
-          flight.actualDepartureTime = new Date(message.newValue);
-        }
-        break;
-      case "STATUS_CHANGE":
-        flight.status = message.newValue as any;
-        break;
-      case "GATE_CHANGE":
-        // Gate info would be stored if we had a gate field
-        break;
-      case "CANCELLATION":
-        flight.status = "CANCELLED" as any;
-        break;
-    }
-
-    flight.lastUpdated = new Date();
-    await flightRepository.save(flight);
-
-    // Find all users subscribed to this flight
-    const subscriptions = await subscriptionRepository.find({
-      where: { flightId: flight.id },
-    });
 
     console.log(
       `Found ${subscriptions.length} users subscribed to flight ${message.flightNumber}`
     );
+
+    // Find or create the flight
+    let flight = await flightRepository.findOne({
+      where: { id: message.flightId },
+    });
+
+    if (!flight) {
+      // Create flight from message data
+      flight = flightRepository.create({
+        id: message.flightId,
+        flightNumber: message.flightNumber,
+        scheduleDate: message.scheduleDate,
+        scheduledDepartureTime: new Date(message.scheduledDepartureTime),
+        actualDepartureTime: message.actualDepartureTime ? new Date(message.actualDepartureTime) : null,
+        arrivalTime: message.arrivalTime ? new Date(message.arrivalTime) : null,
+        origin: message.origin,
+        destination: message.destination,
+        status: message.status as any,
+        lastUpdated: new Date(),
+      });
+    } else {
+      // Update existing flight with new data
+      flight.actualDepartureTime = message.actualDepartureTime ? new Date(message.actualDepartureTime) : null;
+      flight.arrivalTime = message.arrivalTime ? new Date(message.arrivalTime) : null;
+      flight.origin = message.origin;
+      flight.destination = message.destination;
+      flight.status = message.status as any;
+      flight.lastUpdated = new Date();
+    }
+
+    await flightRepository.save(flight);
 
     // Send notifications to all subscribed users
     for (const subscription of subscriptions) {

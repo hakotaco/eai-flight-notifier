@@ -12,17 +12,36 @@ class RabbitMQService {
   async connect(): Promise<void> {
     try {
       console.log('Connecting to RabbitMQ...');
-      this.connection = await amqp.connect(this.url);
+      // Connect to the flight_ops vhost to match schiphol-api
+      const urlWithVhost = this.url.endsWith('/') 
+        ? this.url + 'flight_ops' 
+        : this.url + '/flight_ops';
+      
+      this.connection = await amqp.connect(urlWithVhost);
       this.channel = await this.connection.createChannel();
+      
+      // Declare the exchange (must match schiphol-api)
+      const exchangeName = 'flight.events';
+      await this.channel.assertExchange(exchangeName, 'topic', {
+        durable: true,
+      });
       
       // Declare queues
       if (this.channel) {
-        await this.channel.assertQueue(process.env.FLIGHT_UPDATES_QUEUE || 'flight_updates', {
+        const flightQueue = process.env.FLIGHT_UPDATES_QUEUE || 'flight.delayed';
+        const trafficQueue = process.env.TRAFFIC_UPDATES_QUEUE || 'traffic_updates';
+        
+        await this.channel.assertQueue(flightQueue, {
           durable: true,
         });
-        await this.channel.assertQueue(process.env.TRAFFIC_UPDATES_QUEUE || 'traffic_updates', {
+        await this.channel.assertQueue(trafficQueue, {
           durable: true,
         });
+        
+        // Bind the flight queue to the exchange with the routing key
+        await this.channel.bindQueue(flightQueue, exchangeName, flightQueue);
+        
+        console.log(`Queue '${flightQueue}' bound to exchange '${exchangeName}' with routing key '${flightQueue}'`);
       }
 
       console.log('Connected to RabbitMQ successfully');

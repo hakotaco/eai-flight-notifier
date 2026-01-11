@@ -80,7 +80,7 @@ services:
     container_name: flight_schiphol_api
     volumes:
       - ./schiphol-api:/app
-    command: sh -c "bun install && tail -f /dev/null"
+      - /app/node_modules
     environment:
       DB_HOST: db
       DB_PORT: 5432
@@ -88,6 +88,9 @@ services:
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASS}
       MQ_HOST: mq
+      MQ_USER: ${MQ_USER}
+      MQ_PASS: ${MQ_PASS}
+      FLIGHT_UPDATES_QUEUE: ${FLIGHT_UPDATES_QUEUE}
       SCHIPHOL_APP_ID: ${SCHIPHOL_APP_ID}
       SCHIPHOL_APP_KEY: ${SCHIPHOL_APP_KEY}
       SCHIPHOL_API_URL: ${SCHIPHOL_API_URL}
@@ -116,13 +119,19 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASS}
       RABBITMQ_URL: amqp://${MQ_USER}:${MQ_PASS}@mq:5672
-      FLIGHT_UPDATES_QUEUE: flight_updates
+      FLIGHT_UPDATES_QUEUE: ${FLIGHT_UPDATES_QUEUE}
       TRAFFIC_UPDATES_QUEUE: traffic_updates
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
-    command: sh -c "bun install && tail -f /dev/null"
+      SMTP_USER: ${EMAIL_USER}
+      SMTP_PASS: ${EMAIL_PASSWORD}
+      EMAIL_FROM: ${EMAIL_FROM}
+      BACKEND_URL: ${BACKEND_URL}
     volumes:
       - ./backend:/app
+      - /app/node_modules
+    networks:
+      - flight_net
     depends_on:
       db:
         condition: service_healthy
@@ -142,7 +151,9 @@ services:
       NEXT_PUBLIC_API_URL: http://localhost:3000
     volumes:
       - ./frontend:/app
-    command: sh -c "bun install && tail -f /dev/null"
+      - /app/node_modules
+    networks:
+      - flight_net
     depends_on:
       - backend
 

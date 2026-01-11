@@ -209,7 +209,11 @@ export default function SignupForm() {
             required
             value={formData.departureDate}
             onChange={handleChange}
-            min={new Date().toISOString().slice(0, 16)}
+            min={(() => {
+              const today = new Date()
+              today.setHours(0, 0, 0, 0)
+              return today.toISOString().slice(0, 16)
+            })()}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition"
           />
         </div>

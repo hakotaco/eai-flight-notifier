@@ -11,12 +11,17 @@ import {
 // This interface can be refactored to env.d.ts if needed.
 interface FlightDelayEventPayload {
   flightId: string;
-  flightName: string;
-  scheduleTime: Date;
-  actualTime: Date | null;
+  flightNumber: string;
+  scheduleDate: string;
+  scheduledDepartureTime: string;
+  actualDepartureTime: string | null;
+  arrivalTime: string | null;
+  origin: string;
+  destination: string;
+  status: string;
+  updateType: "DELAY" | "TIME_CHANGE";
   oldDelayMinutes: number;
   newDelayMinutes: number;
-  status: "DELAYED" | "ON_TIME";
   timestamp: string;
 }
 
@@ -187,7 +192,8 @@ export class FlightIngestionService {
           oldDelayMinutes,
           newDelayMinutes
         );
-        await this.mq.publish("flight.delayed", eventPayload);
+        const queueName = process.env.FLIGHT_UPDATES_QUEUE || "flight.delayed";
+        await this.mq.publish(queueName, eventPayload);
         eventsPublished++;
       }
     }
@@ -210,18 +216,38 @@ export class FlightIngestionService {
     oldDelayMinutes: number,
     newDelayMinutes: number
   ): FlightDelayEventPayload {
+    const destinations = flight.route?.destinations?.join(', ') || 'Unknown';
+    const isArrival = flight.flightDirection === 'A';
+    
     return {
       flightId: flight.id,
-      flightName: flight.mainFlight,
-      scheduleTime: flight.scheduleDateTime,
-      actualTime: flight.actualTime,
+      flightNumber: flight.mainFlight,
+      scheduleDate: flight.scheduleDate,
+      scheduledDepartureTime: flight.scheduleDateTime.toISOString(),
+      actualDepartureTime: flight.actualTime ? flight.actualTime.toISOString() : null,
+      arrivalTime: flight.estimatedTime ? flight.estimatedTime.toISOString() : null,
+      origin: isArrival ? destinations : 'Schiphol Airport (AMS)',
+      destination: isArrival ? 'Schiphol Airport (AMS)' : destinations,
+      status: this.mapFlightStatus(flight.flightStates, newDelayMinutes),
+      updateType: newDelayMinutes > this.SIGNIFICANT_DELAY_THRESHOLD_MINUTES ? "DELAY" : "TIME_CHANGE",
       oldDelayMinutes,
       newDelayMinutes,
-      status:
-        newDelayMinutes > this.SIGNIFICANT_DELAY_THRESHOLD_MINUTES
-          ? "DELAYED"
-          : "ON_TIME",
       timestamp: new Date().toISOString(),
     };
+  }
+
+  private mapFlightStatus(flightStates: string[], delayMinutes: number): string {
+    if (!flightStates || flightStates.length === 0) {
+      return delayMinutes > this.SIGNIFICANT_DELAY_THRESHOLD_MINUTES ? 'DELAYED' : 'SCHEDULED';
+    }
+    
+    const statesStr = flightStates.join(',').toUpperCase();
+    
+    if (statesStr.includes('CANCEL')) return 'CANCELLED';
+    if (statesStr.includes('DEPARTED') || statesStr.includes('AIR')) return 'DEPARTED';
+    if (statesStr.includes('ARRIVED') || statesStr.includes('LANDED')) return 'ARRIVED';
+    if (delayMinutes > this.SIGNIFICANT_DELAY_THRESHOLD_MINUTES) return 'DELAYED';
+    
+    return 'SCHEDULED';
   }
 }

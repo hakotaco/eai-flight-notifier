@@ -35,13 +35,6 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       where: { email },
     });
 
-    if (existingUser) {
-      res.status(400).json({
-        error: "User with this email already exists",
-      });
-      return;
-    }
-
     // Generate a simple password for now (in production, you'd want proper auth)
     const tempPassword = Math.random().toString(36).slice(-8);
     const passwordHash = await bcrypt.hash(tempPassword, 10);
@@ -57,7 +50,7 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 
     try {
       // Create and save user
-      const user = userRepository.create({
+      const user = existingUser || userRepository.create({
         id: uuidv4(),
         email,
         name,
@@ -103,6 +96,64 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       await queryRunner.manager.save(subscription);
 
       await queryRunner.commitTransaction();
+
+      // Query FlightState database for real-time flight details
+      let flightDetails = null;
+      try {
+        const flightStateQuery = `
+          SELECT * FROM flight_state 
+          WHERE "mainFlight" = $1 
+          AND "scheduleDate" = $2 
+          ORDER BY "lastUpdatedAt" DESC 
+          LIMIT 1
+        `;
+        const flightStateResult = await AppDataSource.query(flightStateQuery, [
+          flightNumber.toUpperCase(),
+          scheduleDate,
+        ]);
+        
+        if (flightStateResult && flightStateResult.length > 0) {
+          flightDetails = flightStateResult[0];
+          console.log(`Found flight details in FlightState DB for ${flightNumber}`);
+        } else {
+          console.log(`No flight details found in FlightState DB for ${flightNumber} on ${scheduleDate}`);
+        }
+      } catch (error) {
+        console.error("Error querying FlightState:", error);
+        // Continue even if query fails
+      }
+
+      // Send confirmation email with flight details
+      try {
+        const notificationService = (await import("../services/notification.service")).default;
+        if (flightDetails) {
+          await notificationService.sendSubscriptionConfirmation(
+            user,
+            flightDetails,
+            subscription.id
+          );
+        } else {
+          // Send confirmation with basic info if FlightState not found
+          await notificationService.sendSubscriptionConfirmation(
+            user,
+            {
+              flightName: flightNumber.toUpperCase(),
+              mainFlight: flightNumber.toUpperCase(),
+              scheduleDateTime: departureDateTime,
+              flightDirection: 'D',
+              route: null,
+              gate: null,
+              terminal: null,
+              flightStates: ['Scheduled'],
+            },
+            subscription.id
+          );
+        }
+        console.log(`Confirmation email sent to ${user.email}`);
+      } catch (emailError) {
+        console.error("Error sending confirmation email:", emailError);
+        // Don't fail signup if email fails
+      }
 
       // Generate JWT token
       const token = jwt.sign(
