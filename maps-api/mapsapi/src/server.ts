@@ -14,7 +14,7 @@ export function createServer() {
 
   app.get('/health', (_req, res) => res.json({ ok: true }));
 
-  // No local users API — users are sourced from the main dashboard
+  // No local users API, users are sourced from the main dashboard
 
   // Notifications dashboard
   app.get('/notifications', async (_req, res) => {

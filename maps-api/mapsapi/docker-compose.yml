@@ -17,15 +17,12 @@ services:
       - rabbitmq
     environment:
       - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
-      - DASHBOARD_USERS_URL=${DASHBOARD_USERS_URL}
       - RABBITMQ_URL=${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672}
       - RABBITMQ_EXCHANGE=traffic.notifications
-      - PORT=3000
-      - POLL_CRON=${POLL_CRON:-0 * * * *}
       - POLL_WINDOW_HOURS=${POLL_WINDOW_HOURS:-4}
       - SCHIPHOL_ADDRESS=${SCHIPHOL_ADDRESS:-Amsterdam Airport Schiphol}
+      - DASHBOARD_TRAVELERS_QUEUE=${DASHBOARD_TRAVELERS_QUEUE:-dashboard.travelers}
+      - SCHIPHOL_ARRIVAL_REQUEST_QUEUE=${SCHIPHOL_ARRIVAL_REQUEST_QUEUE:-schiphol.arrival.request}
+      - RPC_TIMEOUT_MS=${RPC_TIMEOUT_MS:-8000}
       - NODE_ENV=production
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./data:/app/data
+    # No HTTP port exposure; MQ-only integration

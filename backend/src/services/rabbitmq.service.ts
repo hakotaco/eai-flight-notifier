@@ -25,22 +25,22 @@ class RabbitMQService {
       await this.channel.assertExchange(exchangeName, 'topic', {
         durable: true,
       });
-      
+
       // Declare queues
       if (this.channel) {
         const flightQueue = process.env.FLIGHT_UPDATES_QUEUE || 'flight.delayed';
         const trafficQueue = process.env.TRAFFIC_UPDATES_QUEUE || 'traffic_updates';
-        
+
         await this.channel.assertQueue(flightQueue, {
           durable: true,
         });
         await this.channel.assertQueue(trafficQueue, {
           durable: true,
         });
-        
+
         // Bind the flight queue to the exchange with the routing key
         await this.channel.bindQueue(flightQueue, exchangeName, flightQueue);
-        
+
         console.log(`Queue '${flightQueue}' bound to exchange '${exchangeName}' with routing key '${flightQueue}'`);
       }
 

@@ -13,5 +13,11 @@
     "lib": ["ES2020", "DOM"],
     "types": ["node"]
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": [
+    "src/server.ts",
+    "src/scheduler.ts",
+    "src/repos/**/*",
+    "src/utils/jsonStore.ts"
+  ]
 }

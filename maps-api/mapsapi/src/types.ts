@@ -31,4 +31,16 @@ export interface Notification {
   destination: string;
   origin: string;
   traffic: TrafficAssessment;
+  // Optional: snapshot of flight arrival info from Schiphol service
+  flightArrival?: {
+    flightNumber: string;
+    scheduleDate: string;
+    scheduled?: string | null;
+    estimated?: string | null;
+    actual?: string | null;
+    status?: string[];
+    gate?: string | null;
+    terminal?: string | null;
+    lastUpdatedAt?: string | null;
+  };
 }
