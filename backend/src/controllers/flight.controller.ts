@@ -18,9 +18,24 @@ export const handleFlightUpdate = async (
     const subscriptionRepository =
       AppDataSource.getRepository(UserFlightSubscription);
 
-    // First check if anyone is subscribed to this flight
+    // Find the flight by flightNumber and scheduleDate (not by message.flightId which is random)
+    let flight = await flightRepository.findOne({
+      where: {
+        flightNumber: message.flightNumber,
+        scheduleDate: message.scheduleDate,
+      },
+    });
+
+    if (!flight) {
+      console.log(
+        `Flight ${message.flightNumber} on ${message.scheduleDate} not found in database, no subscriptions exist`
+      );
+      return;
+    }
+
+    // Now check if anyone is subscribed to this flight using the DB flight ID
     const subscriptions = await subscriptionRepository.find({
-      where: { flightId: message.flightId },
+      where: { flightId: flight.id },
     });
 
     if (subscriptions.length === 0) {
@@ -34,34 +49,13 @@ export const handleFlightUpdate = async (
       `Found ${subscriptions.length} users subscribed to flight ${message.flightNumber}`
     );
 
-    // Find or create the flight
-    let flight = await flightRepository.findOne({
-      where: { id: message.flightId },
-    });
-
-    if (!flight) {
-      // Create flight from message data
-      flight = flightRepository.create({
-        id: message.flightId,
-        flightNumber: message.flightNumber,
-        scheduleDate: message.scheduleDate,
-        scheduledDepartureTime: new Date(message.scheduledDepartureTime),
-        actualDepartureTime: message.actualDepartureTime ? new Date(message.actualDepartureTime) : null,
-        arrivalTime: message.arrivalTime ? new Date(message.arrivalTime) : null,
-        origin: message.origin,
-        destination: message.destination,
-        status: message.status as any,
-        lastUpdated: new Date(),
-      });
-    } else {
-      // Update existing flight with new data
-      flight.actualDepartureTime = message.actualDepartureTime ? new Date(message.actualDepartureTime) : null;
-      flight.arrivalTime = message.arrivalTime ? new Date(message.arrivalTime) : null;
-      flight.origin = message.origin;
-      flight.destination = message.destination;
-      flight.status = message.status as any;
-      flight.lastUpdated = new Date();
-    }
+    // Update the flight with new data from the message
+    flight.actualDepartureTime = message.actualDepartureTime ? new Date(message.actualDepartureTime) : null;
+    flight.arrivalTime = message.arrivalTime ? new Date(message.arrivalTime) : null;
+    flight.origin = message.origin;
+    flight.destination = message.destination;
+    flight.status = message.status as any;
+    flight.lastUpdated = new Date();
 
     await flightRepository.save(flight);
 

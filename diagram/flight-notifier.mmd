@@ -1,67 +1,104 @@
 graph TB
-    subgraph Central["Central Service"]
-        UserMgmt[User Management]
-        FlightReg[Flight Registration]
-        NotifCalc[Notification Calculator]
-        FlightMon[Flight Monitor]
-        NotifDisp[Notification Dispatcher]
-        QueueConsumer[Queue Consumer]
-    end
-    
-    subgraph External["External Services"]
-        SchipholSvc[Schiphol Service]
-        MapsSvc[Google Maps Service]
-    end
-    
-    subgraph DB["Database"]
-        UsersDB[(Users Table)]
-        FlightsDB[(Flights Table)]
-        NotifsDB[(Notifications Table)]
-    end
-    
-    subgraph Queue["Message Queue - RabbitMQ"]
-        FlightQueue{{Flight Updates Queue}}
-        TrafficQueue{{Traffic Updates Queue}}
-    end
-    
     User((User))
-    EmailSvc[Email Service]
     
-    %% User interactions
-    User -->|Sign Up / Login| UserMgmt
-    User -->|Register Flight| FlightReg
+    subgraph Frontend["Frontend - Next.js"]
+        SignupForm[Signup Form]
+    end
     
-    %% Central Service - Database
-    UserMgmt -->|Store/Retrieve| UsersDB
-    FlightReg -->|Store Flight Preferences| FlightsDB
-    FlightReg -->|Calculate Notification Times| NotifCalc
+    subgraph Backend["Backend - Central Service"]
+        API[REST API]
+        SubMgmt[Subscription Management]
+        QueueConsumer[RabbitMQ Consumer]
+        FlightHandler[Flight Update Handler]
+        TrafficHandler[Traffic Update Handler]
+        EmailNotif[Email Notification Service]
+    end
     
-    NotifCalc -->|Store Schedule| NotifsDB
-    NotifCalc -->|Read Flight Data| FlightsDB
+    subgraph Database["PostgreSQL Database"]
+        UsersTable[(users)]
+        FlightsTable[(flights)]
+        SubsTable[(user_flight_subscription)]
+        FlightStateTable[(flight_state)]
+        MapsTable[(travel_times)]
+    end
     
-    %% External Services to Queue
-    SchipholSvc -->|Push Updates| FlightQueue
-    MapsSvc -->|Push Updates| TrafficQueue
+    subgraph RabbitMQ["RabbitMQ Message Broker<br/>vhost: flight_ops"]
+        Exchange["flight.events<br/>(Topic Exchange)"]
+        FlightQueue{{"flight.delayed<br/>(Queue)"}}
+        SubQueue{{"new_subscriptions<br/>(Queue)"}}
+        TrafficQueue{{"traffic.updates<br/>(Queue)"}}
+        
+        Exchange -.->|binding: flight.delayed| FlightQueue
+        Exchange -.->|binding: subscription.*| SubQueue
+        Exchange -.->|binding: traffic.alert| TrafficQueue
+    end
     
-    %% Queue Consumer
-    QueueConsumer -->|Consume| FlightQueue
-    QueueConsumer -->|Consume| TrafficQueue
-    QueueConsumer -->|Process| FlightMon
+    subgraph SchipholCron["Schiphol API Service<br/>(Cron: every 2 min)"]
+        SchipholBlackbox["• Polls Schiphol API<br/>• Detects flight delays<br/>• Updates flight states"]
+    end
     
-    %% Flight Monitor
-    FlightMon -->|Update Status| FlightsDB
-    FlightMon -->|Check Rules| NotifsDB
-    FlightMon -->|Trigger| NotifDisp
+    subgraph MapsCron["Maps API Service<br/>(Cron: TBD)"]
+        MapsBlackbox["• Calculates travel time<br/>• Monitors traffic<br/>• Schedules notifications"]
+    end
     
-    %% Notification Dispatcher
-    NotifDisp -->|Send Email| EmailSvc
-    NotifDisp -->|Update Status| NotifsDB
+    SchipholAPI[Schiphol Public API]
+    GoogleMaps[Google Maps API]
+    EmailService[Email Service<br/>Gmail SMTP]
+    
+    %% User Flow
+    User -->|1. Sign up & Subscribe| SignupForm
+    SignupForm -->|2. POST /api/auth/signup| API
+    
+    %% Backend Signup Flow
+    API -->|3. Create User| UsersTable
+    API -->|4. Create Flight Record| FlightsTable
+    API -->|5. Create Subscription| SubsTable
+    API -->|6. Query Flight Details| FlightStateTable
+    API -->|7. Publish new_subscription| Exchange
+    API -->|8. Send Confirmation Email| EmailService
+    
+    %% Schiphol Service Flow
+    SchipholAPI -->|Flight Data| SchipholBlackbox
+    SchipholBlackbox -->|Store/Update| FlightStateTable
+    SchipholBlackbox -->|Publish Delay Events| Exchange
+    
+    %% Backend Consumption Flow
+    FlightQueue -->|9. Consume Messages| QueueConsumer
+    QueueConsumer -->|10. Process| FlightHandler
+    FlightHandler -->|11. Check Subscriptions| SubsTable
+    FlightHandler -->|12. Update Flight| FlightsTable
+    FlightHandler -->|13. Send Delay Notification| EmailNotif
+    EmailNotif -->|14. Email| EmailService
+    
+    %% Maps Service Flow
+    SubQueue -->|Subscribe Events| MapsBlackbox
+    MapsBlackbox -->|Read Departure Times| FlightStateTable
+    MapsBlackbox -->|Store Travel Data| MapsTable
+    GoogleMaps -->|Traffic Data| MapsBlackbox
+    MapsBlackbox -->|Publish Traffic Alert<br/>at departure minus travel minus 30min| Exchange
+    
+    %% Backend Traffic Consumption Flow
+    TrafficQueue -->|16. Consume Traffic Messages| QueueConsumer
+    QueueConsumer -->|17. Process| TrafficHandler
+    TrafficHandler -->|18. Send Traffic Notification| EmailNotif
+    EmailNotif -->|19. Email| EmailService
+    
+    %% Final delivery
+    EmailService -->|20. Notification Emails| User
     
     %% Styling
-    classDef serviceStyle fill:#e1f5ff,stroke:#01579b,stroke-width:2px
-    classDef dbStyle fill:#fff9c4,stroke:#f57f17,stroke-width:2px
-    classDef queueStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef userStyle fill:#43a047,stroke:#1b5e20,stroke-width:3px,color:#fff
+    classDef frontendStyle fill:#2e7d32,stroke:#1b5e20,stroke-width:2px,color:#fff
+    classDef backendStyle fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    classDef dbStyle fill:#2e7d32,stroke:#1b5e20,stroke-width:2px,color:#fff
+    classDef queueStyle fill:#1b5e20,stroke:#0d3d10,stroke-width:3px,color:#fff
+    classDef cronStyle fill:#2e7d32,stroke:#1b5e20,stroke-width:2px,color:#fff
+    classDef externalStyle fill:#43a047,stroke:#2e7d32,stroke-width:2px,color:#fff
     
-    class UserMgmt,FlightReg,NotifCalc,FlightMon,NotifDisp,QueueConsumer serviceStyle
-    class UsersDB,FlightsDB,NotifsDB dbStyle
-    class FlightQueue,TrafficQueue queueStyle
+    class User userStyle
+    class SignupForm frontendStyle
+    class API,SubMgmt,QueueConsumer,FlightHandler,TrafficHandler,EmailNotif backendStyle
+    class UsersTable,FlightsTable,SubsTable,FlightStateTable,MapsTable dbStyle
+    class Exchange,FlightQueue,SubQueue,TrafficQueue queueStyle
+    class SchipholBlackbox,MapsBlackbox cronStyle
+    class SchipholAPI,GoogleMaps,EmailService externalStyle

@@ -203,6 +203,44 @@ export class FlightIngestionService {
         `[FlightIngestionService] Published ${eventsPublished} delay change events.`
       );
     }
+
+    // Always publish a ghost demo event for EX1234
+    await this.publishDemoFlightEvent();
+  }
+
+  /**
+   * Publishes a ghost demo event for flight EX1234.
+   * This is for demonstration purposes and doesn't correspond to a real flight.
+   */
+  private async publishDemoFlightEvent(): Promise<void> {
+    try {
+      const now = new Date();
+      const scheduledTime = new Date(now.getTime() + 2 * 60 * 60 * 1000); // 2 hours from now
+      const delayedTime = new Date(scheduledTime.getTime() + 45 * 60 * 1000); // 45 min delay
+
+      const demoEvent: FlightDelayEventPayload = {
+        flightId: "demo-ex1234-" + now.getTime(),
+        flightNumber: "EX1234",
+        scheduleDate: scheduledTime.toISOString().split('T')[0]!,
+        scheduledDepartureTime: scheduledTime.toISOString(),
+        actualDepartureTime: delayedTime.toISOString(),
+        arrivalTime: new Date(delayedTime.getTime() + 90 * 60 * 1000).toISOString(),
+        origin: "Schiphol Airport (AMS)",
+        destination: "Demo Destination (DEMO)",
+        status: "DELAYED",
+        updateType: "DELAY",
+        oldDelayMinutes: 0,
+        newDelayMinutes: 45,
+        timestamp: now.toISOString(),
+      };
+
+      const queueName = process.env.FLIGHT_UPDATES_QUEUE || "flight.delayed";
+      await this.mq.publish(queueName, demoEvent);
+      console.log("[FlightIngestionService] Published ghost demo event for EX1234");
+    } catch (error) {
+      console.error("[FlightIngestionService] Failed to publish demo event:", error);
+      // Don't throw - this is a bonus feature
+    }
   }
 
   /**
