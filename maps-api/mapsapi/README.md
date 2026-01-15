@@ -1,11 +1,12 @@
-MapsAPI Traffic Notifier Service (MQ-only)
+MapsAPI Traffic Notifier Service (MQ‑only)
 
-What it does now (MQ-only design):
-- Listens on RabbitMQ for traveler messages pushed by your dashboard.
-- For travelers departing within the next N hours (default 4 via POLL_WINDOW_HOURS), computes current road traffic from the traveler’s address to Amsterdam Airport Schiphol using Google Maps Directions API.
+What it does (final design):
+- Listens on RabbitMQ for traveler messages pushed by the dashboard.
+- Filters to travelers departing within the next N hours (default 4 via `POLL_WINDOW_HOURS`).
+- Computes current road traffic from the traveler’s address to Amsterdam Airport Schiphol using Google Maps Directions API.
 - Classifies traffic as regular or heavy (heavy if ETA is 25%+ slower than base or delay ≥ 15 minutes).
-- Requests flight arrival info from the Schiphol service via RabbitMQ RPC (best‑effort; continues if unavailable) and includes it with the traffic notification.
-- Publishes a traffic notification to the `traffic.notifications` fanout exchange for the dashboard to consume.
+- Best‑effort: requests flight arrival info from Schiphol service via RabbitMQ RPC and includes it if available (continues without it if not).
+- Publishes a traffic notification to the `traffic.notifications` fanout exchange for the dashboard/backend to consume.
 
 Data handling:
 - No traveler PII is stored locally. Traveler data is received transiently via RabbitMQ, used to compute and publish notifications, and then discarded.
@@ -95,16 +96,58 @@ Environment (set via docker-compose or env file):
 - `POLL_WINDOW_HOURS` (default: 4; only travelers departing within this window are processed)
 - `SCHIPHOL_ADDRESS` (default: `Amsterdam Airport Schiphol`)
 
-Run with Docker:
-1. Set required envs (at least `GOOGLE_MAPS_API_KEY`).
-2. `docker compose up --build`
-3. RabbitMQ UI: http://localhost:15672 (guest/guest)
+Run options
+- Standalone (dev quickstart with its own RabbitMQ):
+  1) Set `GOOGLE_MAPS_API_KEY`.
+  2) In this folder: `docker compose up --build` (spins up a local RabbitMQ just for this service).
+  3) RabbitMQ UI: http://localhost:15672 (guest/guest).
+  4) Use the UI to publish test traveler messages to `dashboard.travelers`.
 
-Local dev:
-1. npm install
-2. Set env vars in `.env` (same keys as above)
-3. npm run dev
+- Integrated with the main project (recommended for end‑to‑end):
+  Run the root stack and point this service to the root RabbitMQ. See “End‑to‑end test procedure” below.
 
-Notes:
-- No HTTP server is exposed by this service in MQ-only mode.
-- No local persistence: notifications are not stored on disk; they’re only published to RabbitMQ.
+!!! End‑to‑end test procedure (final project)
+1) Start Docker Desktop and ensure the engine is running.
+
+2) From the project root, start infra and app services (RabbitMQ, DB, backend, Schiphol API):
+   - Infra (RabbitMQ + Postgres + Terraform vhost setup):
+     - `docker compose --profile infra up -d`
+     - Wait for `mq` (RabbitMQ) to be healthy; Terraform will ensure the `flight_ops` vhost for flight events.
+
+3) Start MapsAPI (this service) locally against the root RabbitMQ:
+   - PowerShell (Windows):
+     - `cd C:\Users\alex\IdeaProjects\eai-flight-notifier\maps-api\mapsapi`
+     - `npm install`
+     - Set envs (use your actual MQ credentials from the project `.env`):
+       - `$env:GOOGLE_MAPS_API_KEY = "YOUR_MAPS_KEY"`
+       - `$env:RABBITMQ_URL = "amqp://<MQ_USER>:<MQ_PASS>@localhost:5672"`
+     - `npm run build`
+     - `npm run start`
+   Notes:
+   - Running MapsAPI via its own Docker Compose will spin up a separate RabbitMQ and is not recommended for the integrated test. Running it as a local Node process is simplest for E2E.
+
+4) Open RabbitMQ Management UI from the root stack: http://localhost:15672 and log in with your MQ credentials (from the project `.env`).
+   - Ensure a queue (e.g., `traffic_updates`) is bound to the `traffic.notifications` fanout exchange (the backend service does this automatically at startup if configured with `TRAFFIC_UPDATES_QUEUE`).
+
+5) Publish a test traveler message to the `dashboard.travelers` queue via the UI:
+   ```json
+   {
+     "id": "user-123",
+     "address": "Dam Square, Amsterdam",
+     "flightNumber": "KL1234",
+     "departureTime": "<an ISO time within the next 4 hours>"
+   }
+   ```
+   - Tip: The service ignores travelers outside the next `POLL_WINDOW_HOURS` window.
+
+6) Observe results:
+   - MapsAPI logs should show a computed route and “Published traffic notification …”.
+   - Backend logs should show “Received traffic update …” followed by “Traffic update processed and notification sent …”.
+   - In RabbitMQ UI, the bound queue (e.g., `traffic_updates`) should receive one message for each traveler processed.
+   - If a Schiphol RPC consumer is running on `schiphol.arrival.request`, notifications may include a `flightArrival` snapshot; otherwise that field is omitted by design.
+
+Troubleshooting
+- Docker named‑pipe or connection errors on Windows: start/restart Docker Desktop; verify with `docker info`.
+- No notifications received: ensure `departureTime` is within the next `POLL_WINDOW_HOURS` (default 4h).
+- Maps API failures: verify `GOOGLE_MAPS_API_KEY` is set and enabled for Directions + Geocoding; check quota/errors in logs.
+- RabbitMQ connectivity: confirm `RABBITMQ_URL` matches the root broker (typically `amqp://<MQ_USER>:<MQ_PASS>@localhost:5672`).
