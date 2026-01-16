@@ -119,6 +119,7 @@ services:
       RABBITMQ_URL: amqp://${MQ_USER}:${MQ_PASS}@mq:5672
       FLIGHT_UPDATES_QUEUE: ${FLIGHT_UPDATES_QUEUE}
       TRAFFIC_UPDATES_QUEUE: traffic_updates
+      DASHBOARD_TRAVELERS_QUEUE: ${DASHBOARD_TRAVELERS_QUEUE}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
       SMTP_USER: ${EMAIL_USER}
@@ -174,6 +175,8 @@ services:
       RPC_TIMEOUT_MS: ${RPC_TIMEOUT_MS}
       POLL_WINDOW_HOURS: ${POLL_WINDOW_HOURS}
       SCHIPHOL_ADDRESS: ${SCHIPHOL_ADDRESS}
+      DASHBOARD_USERS_URL: http://backend:3000/api/users/travelers
+      POLL_CRON: ${POLL_CRON}
     volumes:
       - ./maps-api/mapsapi:/app
       - /app/node_modules
@@ -182,6 +185,8 @@ services:
     depends_on:
       mq:
         condition: service_healthy
+      backend:
+        condition: service_started
 
 volumes:
   pg_data:

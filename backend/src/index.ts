@@ -74,7 +74,9 @@ app.get('/', (_req: Request, res: Response) => {
 
 // Route handlers
 import authRoutes from './routes/auth.routes';
+import usersRoutes from './routes/users.routes';
 app.use('/api/auth', authRoutes);
+app.use('/api/users', usersRoutes);
 
 // Error handling middleware
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {

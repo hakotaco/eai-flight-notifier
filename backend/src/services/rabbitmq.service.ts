@@ -162,6 +162,49 @@ class RabbitMQService {
     return this.channel;
   }
 
+  /**
+   * Publishes a traveler notification to the dashboard.travelers queue
+   * for consumption by maps-api service
+   */
+  async publishTravelerNotification(traveler: {
+    id: string;
+    address: string;
+    flightNumber: string;
+    email?: string;
+    name?: string;
+    departureTime?: Date | string;
+  }): Promise<void> {
+    if (!this.trafficChannel) {
+      throw new Error('RabbitMQ traffic channel not initialized');
+    }
+
+    const queue = process.env.DASHBOARD_TRAVELERS_QUEUE || 'dashboard.travelers';
+    
+    // Ensure queue exists
+    await this.trafficChannel.assertQueue(queue, { durable: true });
+    
+    // Format the message as expected by maps-api
+    const message = {
+      id: traveler.id,
+      address: traveler.address,
+      flightNumber: traveler.flightNumber,
+      email: traveler.email,
+      name: traveler.name,
+      departureTime: traveler.departureTime instanceof Date 
+        ? traveler.departureTime.toISOString() 
+        : traveler.departureTime,
+    };
+
+    const buffer = Buffer.from(JSON.stringify(message));
+    
+    this.trafficChannel.sendToQueue(queue, buffer, {
+      persistent: true,
+      contentType: 'application/json',
+    });
+
+    console.log(`Published traveler notification for ${traveler.id} to queue ${queue}`);
+  }
+
   // --- Helpers ---
   private stripVHost(url: string): string {
     // Remove any "/<vhost>" suffix if present, leaving base host:port

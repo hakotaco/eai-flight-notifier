@@ -3,6 +3,7 @@ import { createServer } from './server';
 import { rabbit } from './services/rabbit';
 import { TrafficService } from './services/trafficService';
 import { User } from './types';
+import { startScheduler } from './scheduler';
 
 async function main() {
   if (!config.mapsApiKey) {
@@ -20,12 +21,13 @@ async function main() {
   const inWindow = (u: User): boolean => {
     if (!u.departureTime) return false;
     const now = new Date();
-    const dt = new Date(u.departureTime);
-    if (isNaN(dt.getTime())) return false;
-    const horizon = new Date(now.getTime() + config.pollWindowHours * 60 * 60 * 1000);
-    return dt >= now && dt <= horizon;
+    const cet = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Amsterdam' })).getTime();
+    const dt = new Date(u.departureTime).getTime();
+    const horizon = dt - config.pollWindowHours * 60 * 60 * 1000;
+    return (cet >= horizon && cet <= dt);
   };
 
+  // Event-driven: Handle immediate signup notifications
   await rabbit.consumeTravelers(async (u: User) => {
     try {
       if (!inWindow(u)) {
@@ -39,6 +41,14 @@ async function main() {
       throw err; // let consumer nack
     }
   });
+
+  // Periodic: Check all users on a schedule to catch those entering the window
+  if (config.dashboardUsersUrl) {
+    startScheduler();
+    console.log('[Main] Scheduler enabled - will periodically check all users');
+  } else {
+    console.warn('[Main] DASHBOARD_USERS_URL not set - scheduler disabled');
+  }
 
   const shutdown = (signal: string) => async () => {
     console.log(`Received ${signal}, shutting down...`);
