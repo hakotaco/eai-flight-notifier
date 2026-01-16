@@ -155,6 +155,34 @@ services:
     depends_on:
       - backend
 
+  # Maps API Service
+  maps-api:
+    profiles: ["app"]
+    build:
+      context: ./maps-api/mapsapi
+      dockerfile: Dockerfile
+    container_name: flight_maps_api
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      RABBITMQ_URL: amqp://${MQ_USER}:${MQ_PASS}@mq:5672
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      DASHBOARD_TRAVELERS_QUEUE: ${DASHBOARD_TRAVELERS_QUEUE}
+      SCHIPHOL_ARRIVAL_REQUEST_QUEUE: ${SCHIPHOL_ARRIVAL_REQUEST_QUEUE}
+      RPC_TIMEOUT_MS: ${RPC_TIMEOUT_MS}
+      POLL_WINDOW_HOURS: ${POLL_WINDOW_HOURS}
+      SCHIPHOL_ADDRESS: ${SCHIPHOL_ADDRESS}
+    volumes:
+      - ./maps-api/mapsapi:/app
+      - /app/node_modules
+    networks:
+      - flight_net
+    depends_on:
+      mq:
+        condition: service_healthy
+
 volumes:
   pg_data:
   mq_data:

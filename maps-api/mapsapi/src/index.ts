@@ -1,4 +1,5 @@
 import { config } from './config';
+import { createServer } from './server';
 import { rabbit } from './services/rabbit';
 import { TrafficService } from './services/trafficService';
 import { User } from './types';
@@ -7,6 +8,10 @@ async function main() {
   if (!config.mapsApiKey) {
     console.warn('WARNING: GOOGLE_MAPS_API_KEY is not set. The service will fail when calling Maps API.');
   }
+
+  // Start HTTP server
+  const { server } = createServer();
+  console.log(`Maps API service starting on port ${config.port}`);
 
   // MQ-only mode: connect to Rabbit and start consuming traveler messages from the dashboard
   await rabbit.connect();
@@ -37,6 +42,7 @@ async function main() {
 
   const shutdown = (signal: string) => async () => {
     console.log(`Received ${signal}, shutting down...`);
+    server.close();
     process.exit(0);
   };
   process.on('SIGINT', shutdown('SIGINT'));
