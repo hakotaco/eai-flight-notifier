@@ -5,11 +5,11 @@ services:
     image: postgres:18-alpine
     container_name: flight_db
     environment:
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASS:-postgres}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_DB: postgres # default database.
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_PORT}:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./sql:/docker-entrypoint-initdb.d
@@ -25,16 +25,12 @@ services:
     profiles: ["infra"]
     image: rabbitmq:4.1.6-management
     container_name: flight_mq
-    hostname: mq
     environment:
-      RABBITMQ_DEFAULT_USER: ${MQ_USER:-admin}
-      RABBITMQ_DEFAULT_PASS: ${MQ_PASS:-password}
-      RABBITMQ_ERLANG_COOKIE: ${MQ_ERLANG_COOKIE:-DEV_ERLANG_COOKIE}
-      RABBITMQ_NODENAME: rabbit@mq
-      RABBITMQ_DEFAULT_VHOST: /
+      RABBITMQ_DEFAULT_USER: ${MQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${MQ_PASS}
     ports:
-      - "${MQ_PORT:-5672}:5672" # AMQP Protocal Port
-      - "${MQ_MANAGEMENT_PORT:-15672}:15672" # Web UI
+      - "${MQ_PORT}:5672" # AMQP Protocal Port
+      - "${MQ_MANAGEMENT_PORT}:15672" # Web UI
     volumes:
       - mq_data:/var/lib/rabbitmq
     networks:
@@ -43,12 +39,10 @@ services:
       db:
         condition: service_started
     healthcheck:
-      test:
-        ["CMD-SHELL", "rabbitmq-diagnostics -q ping || rabbitmq-diagnostics -q status || exit 1"]
-      interval: 15s
-      timeout: 10s
-      start_period: 120s
-      retries: 15
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   terraform:
     profiles: ["infra"]
@@ -60,7 +54,7 @@ services:
       - TF_VAR_mq_user=${MQ_USER}
       - TF_VAR_mq_pass=${MQ_PASS}
     volumes:
-      - ./terraform:/app/terraform
+      - ./terraform:/app/terraform:Z
     networks:
       - flight_net
     healthcheck:
@@ -118,12 +112,12 @@ services:
       NODE_ENV: development
       PORT: 3000
       DB_HOST: db
-      DB_PORT: ${DB_PORT:-5432}
-      DB_NAME: ${DB_NAME:-postgres}
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASS:-postgres}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASS}
       RABBITMQ_URL: amqp://${MQ_USER}:${MQ_PASS}@mq:5672
-      FLIGHT_UPDATES_QUEUE: ${FLIGHT_UPDATES_QUEUE:-flight.delayed}
+      FLIGHT_UPDATES_QUEUE: ${FLIGHT_UPDATES_QUEUE}
       TRAFFIC_UPDATES_QUEUE: traffic_updates
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}

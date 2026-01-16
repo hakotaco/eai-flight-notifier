@@ -1,4 +1,4 @@
-MapsAPI Traffic Notifier Service (MQ‑only)
+MapsAPI Traffic Notifier Service
 
 What it does (final design):
 - Listens on RabbitMQ for traveler messages pushed by the dashboard.
@@ -96,58 +96,40 @@ Environment (set via docker-compose or env file):
 - `POLL_WINDOW_HOURS` (default: 4; only travelers departing within this window are processed)
 - `SCHIPHOL_ADDRESS` (default: `Amsterdam Airport Schiphol`)
 
-Run options
-- Standalone (dev quickstart with its own RabbitMQ):
-  1) Set `GOOGLE_MAPS_API_KEY`.
-  2) In this folder: `docker compose up --build` (spins up a local RabbitMQ just for this service).
-  3) RabbitMQ UI: http://localhost:15672 (guest/guest).
-  4) Use the UI to publish test traveler messages to `dashboard.travelers`.
 
-- Integrated with the main project (recommended for end‑to‑end):
-  Run the root stack and point this service to the root RabbitMQ. See “End‑to‑end test procedure” below.
+Running locally (host mode)
+Prerequisites: Node.js 18+ (Node 20 recommended), npm, and access to a RabbitMQ broker.
 
-!!! End‑to‑end test procedure (final project)
-1) Start Docker Desktop and ensure the engine is running.
+1) Configure environment (via `.env` in this folder or process env vars):
+   - Required:
+     - `GOOGLE_MAPS_API_KEY` — Directions + Geocoding must be enabled for this key.
+     - `RABBITMQ_URL` — e.g. `amqp://user:pass@localhost:5672` (or your broker host).
+   - Optional (defaults exist):
+     - `RABBITMQ_EXCHANGE`, `DASHBOARD_TRAVELERS_QUEUE`, `SCHIPHOL_ARRIVAL_REQUEST_QUEUE`, `RPC_TIMEOUT_MS`, `POLL_WINDOW_HOURS`, `SCHIPHOL_ADDRESS`, `PORT`.
 
-2) From the project root, start infra and app services (RabbitMQ, DB, backend, Schiphol API):
-   - Infra (RabbitMQ + Postgres + Terraform vhost setup):
-     - `docker compose --profile infra up -d`
-     - Wait for `mq` (RabbitMQ) to be healthy; Terraform will ensure the `flight_ops` vhost for flight events.
-
-3) Start MapsAPI (this service) locally against the root RabbitMQ:
-   - PowerShell (Windows):
+2) Install and start:
+   - Windows PowerShell:
      - `cd C:\Users\alex\IdeaProjects\eai-flight-notifier\maps-api\mapsapi`
      - `npm install`
-     - Set envs (use your actual MQ credentials from the project `.env`):
-       - `$env:GOOGLE_MAPS_API_KEY = "YOUR_MAPS_KEY"`
-       - `$env:RABBITMQ_URL = "amqp://<MQ_USER>:<MQ_PASS>@localhost:5672"`
+     - (optional) `$env:PORT = "3002"`
      - `npm run build`
      - `npm run start`
-   Notes:
-   - Running MapsAPI via its own Docker Compose will spin up a separate RabbitMQ and is not recommended for the integrated test. Running it as a local Node process is simplest for E2E.
+   - Health check: GET `http://localhost:3002/health` → `{ "ok": true }` (if `PORT=3002`).
 
-4) Open RabbitMQ Management UI from the root stack: http://localhost:15672 and log in with your MQ credentials (from the project `.env`).
-   - Ensure a queue (e.g., `traffic_updates`) is bound to the `traffic.notifications` fanout exchange (the backend service does this automatically at startup if configured with `TRAFFIC_UPDATES_QUEUE`).
-
-5) Publish a test traveler message to the `dashboard.travelers` queue via the UI:
+Quick test with RabbitMQ
+1) Ensure your RabbitMQ broker is running and accessible at `RABBITMQ_URL`.
+2) Publish a traveler message to the input queue (`dashboard.travelers` by default):
    ```json
    {
      "id": "user-123",
      "address": "Dam Square, Amsterdam",
      "flightNumber": "KL1234",
-     "departureTime": "<an ISO time within the next 4 hours>"
+     "departureTime": "<ISO timestamp within the next 4 hours>"
    }
    ```
-   - Tip: The service ignores travelers outside the next `POLL_WINDOW_HOURS` window.
-
-6) Observe results:
-   - MapsAPI logs should show a computed route and “Published traffic notification …”.
-   - Backend logs should show “Received traffic update …” followed by “Traffic update processed and notification sent …”.
-   - In RabbitMQ UI, the bound queue (e.g., `traffic_updates`) should receive one message for each traveler processed.
-   - If a Schiphol RPC consumer is running on `schiphol.arrival.request`, notifications may include a `flightArrival` snapshot; otherwise that field is omitted by design.
+3) Bind any queue to the fanout exchange `traffic.notifications` (or use your existing consumer) and observe one notification per traveler. If an RPC consumer listens on `schiphol.arrival.request`, the notification may include a `flightArrival` object; otherwise, that field is omitted.
 
 Troubleshooting
-- Docker named‑pipe or connection errors on Windows: start/restart Docker Desktop; verify with `docker info`.
-- No notifications received: ensure `departureTime` is within the next `POLL_WINDOW_HOURS` (default 4h).
-- Maps API failures: verify `GOOGLE_MAPS_API_KEY` is set and enabled for Directions + Geocoding; check quota/errors in logs.
-- RabbitMQ connectivity: confirm `RABBITMQ_URL` matches the root broker (typically `amqp://<MQ_USER>:<MQ_PASS>@localhost:5672`).
+- No notifications: make sure `departureTime` is within the next `POLL_WINDOW_HOURS` (default 4h).
+- Maps API errors: verify `GOOGLE_MAPS_API_KEY` is set and Directions + Geocoding are enabled for the key.
+- RabbitMQ connectivity: ensure `RABBITMQ_URL` points to a reachable broker and credentials are correct.
