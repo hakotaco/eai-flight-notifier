@@ -9,6 +9,7 @@ This project is a microservices-based system designed to ingest flight data from
 ├── schiphol-api/       # Flight Data Ingestion Service (Source of Truth)
 ├── backend/            # User Notification Service (Express/Node.js logic)
 ├── frontend/           # Web Application (Next.js)
+├── maps-api/           # Location-based Traffic Notifier
 ├── terraform/          # Infrastructure as Code (RabbitMQ Configuration)
 ├── sql/                # Database Initialization Scripts
 ├── docker-compose.yaml # Container Orchestration
