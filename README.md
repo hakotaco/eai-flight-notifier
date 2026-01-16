@@ -9,6 +9,7 @@ This project is a microservices-based system designed to ingest flight data from
 ├── schiphol-api/       # Flight Data Ingestion Service (Source of Truth)
 ├── backend/            # User Notification Service (Express/Node.js logic)
 ├── frontend/           # Web Application (Next.js)
+├── maps-api/           # Location-based Traffic Notifier
 ├── terraform/          # Infrastructure as Code (RabbitMQ Configuration)
 ├── sql/                # Database Initialization Scripts
 ├── docker-compose.yaml # Container Orchestration
@@ -117,6 +118,7 @@ To develop specific services natively while maintaining connectivity to the cont
 | Ingestion   | `flight_schiphol_api`      | N/A       | N/A           | Background worker service; exposes no HTTP port.                         |
 | Backend     | `flight_notifier_backend`  | `3000`    | `3000`        | Express.js API handling user logic and notifications.                    |
 | Frontend    | `flight_notifier_frontend` | `3001`    | `3001`        | Next.js web application.                                                 |
+| MapsAPI     | `flight_maps_api`          | N/A       | `3002`        | Traffic notifier service; consumes traveler queue and publishes updates. |
 
 ## Flight Tracking Database
 
