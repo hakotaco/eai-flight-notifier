@@ -18,7 +18,11 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors({
   origin: ['http://localhost:3001', 'http://frontend:3001'],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -70,7 +74,9 @@ app.get('/', (_req: Request, res: Response) => {
 
 // Route handlers
 import authRoutes from './routes/auth.routes';
+import usersRoutes from './routes/users.routes';
 app.use('/api/auth', authRoutes);
+app.use('/api/users', usersRoutes);
 
 // Error handling middleware
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {

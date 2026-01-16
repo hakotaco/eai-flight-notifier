@@ -212,7 +212,7 @@ export default function SignupForm() {
             min={(() => {
               const today = new Date()
               today.setHours(0, 0, 0, 0)
-              return today.toISOString().slice(0, 16)
+              return today.getTime()
             })()}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition"
           />

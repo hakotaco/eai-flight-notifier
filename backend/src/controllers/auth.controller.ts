@@ -155,6 +155,23 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
         // Don't fail signup if email fails
       }
 
+      // Publish traveler notification to maps-api
+      try {
+        const rabbitmqService = (await import("../services/rabbitmq.service")).default;
+        await rabbitmqService.publishTravelerNotification({
+          id: user.id,
+          address: user.homeAddress,
+          flightNumber: flight.flightNumber,
+          email: user.email,
+          name: user.name,
+          departureTime: flight.scheduledDepartureTime,
+        });
+        console.log(`Traveler notification published for user ${user.id}`);
+      } catch (mqError) {
+        console.error("Error publishing traveler notification:", mqError);
+        // Don't fail signup if MQ publish fails
+      }
+
       // Generate JWT token
       const token = jwt.sign(
         { userId: user.id, email: user.email },

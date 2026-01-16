@@ -28,13 +28,11 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${MQ_USER}
       RABBITMQ_DEFAULT_PASS: ${MQ_PASS}
-      RABBITMQ_ERLANG_COOKIE: ${MQ_ERLANG_COOKIE}
-    user: "999:999"
     ports:
       - "${MQ_PORT}:5672" # AMQP Protocal Port
       - "${MQ_MANAGEMENT_PORT}:15672" # Web UI
     volumes:
-      - mq_data:/var/lib/rabbitmq:Z # Z for SELinux
+      - mq_data:/var/lib/rabbitmq
     networks:
       - flight_net
     depends_on:
@@ -121,6 +119,7 @@ services:
       RABBITMQ_URL: amqp://${MQ_USER}:${MQ_PASS}@mq:5672
       FLIGHT_UPDATES_QUEUE: ${FLIGHT_UPDATES_QUEUE}
       TRAFFIC_UPDATES_QUEUE: traffic_updates
+      DASHBOARD_TRAVELERS_QUEUE: ${DASHBOARD_TRAVELERS_QUEUE}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
       SMTP_USER: ${EMAIL_USER}
@@ -156,6 +155,38 @@ services:
       - flight_net
     depends_on:
       - backend
+
+  # Maps API Service
+  maps-api:
+    profiles: ["app"]
+    build:
+      context: ./maps-api/mapsapi
+      dockerfile: Dockerfile
+    container_name: flight_maps_api
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      RABBITMQ_URL: amqp://${MQ_USER}:${MQ_PASS}@mq:5672
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      DASHBOARD_TRAVELERS_QUEUE: ${DASHBOARD_TRAVELERS_QUEUE}
+      SCHIPHOL_ARRIVAL_REQUEST_QUEUE: ${SCHIPHOL_ARRIVAL_REQUEST_QUEUE}
+      RPC_TIMEOUT_MS: ${RPC_TIMEOUT_MS}
+      POLL_WINDOW_HOURS: ${POLL_WINDOW_HOURS}
+      SCHIPHOL_ADDRESS: ${SCHIPHOL_ADDRESS}
+      DASHBOARD_USERS_URL: http://backend:3000/api/users/travelers
+      POLL_CRON: ${POLL_CRON}
+    volumes:
+      - ./maps-api/mapsapi:/app
+      - /app/node_modules
+    networks:
+      - flight_net
+    depends_on:
+      mq:
+        condition: service_healthy
+      backend:
+        condition: service_started
 
 volumes:
   pg_data:
